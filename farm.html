@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+<title>BC FARM - Ben Chiboub Software</title>
+<meta name="theme-color" content="#0f1117">
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-title" content="BC Farm" />
+<link rel="manifest" href="/site.webmanifest" />
+<script>
+tailwind.config = { 
+  darkMode: 'class', 
+  theme: { 
+    extend: { 
+      fontFamily: { 
+        sans: ['IBM Plex Sans'], 
+        mono: ['IBM Plex Mono'] 
+      } 
+    } 
+  } 
+}
+</script>
+<style>
+:root {
+  --bg-primary: #09090b;
+  --bg-secondary: #18181b;
+  --bg-tertiary: #27272a;
+  --border: #3f3f46;
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --accent: #3b82f6;
+}
+.light-mode {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --border: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --accent: #2563eb;
+}
+[v-cloak]{display:none}
+*{box-sizing:border-box}
+body{font-family:'IBM Plex Sans',sans-serif;overflow:hidden;background:var(--bg-primary);color:var(--text-primary);transition:background .2s,color .2s}
+.custom-scrollbar::-webkit-scrollbar{width:3px}
+.custom-scrollbar::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.no-scrollbar::-webkit-scrollbar{display:none}
+textarea:focus,input:focus,select:focus{outline:none!important;box-shadow:none!important}
+.prose{word-break:break-word;overflow-wrap:break-word}
+.prose pre{white-space:pre!important;overflow-x:auto!important;padding:1rem;border-radius:.5rem;background:var(--bg-tertiary);color:var(--text-primary)}
+.prose code{padding:.2em .4em;border-radius:.25rem;font-size:.875em;background:var(--bg-tertiary);color:var(--text-primary);font-family:'IBM Plex Mono',monospace}
+.prose img{border-radius:.5rem;max-height:400px;object-fit:cover}
+.fade-enter-active,.fade-leave-active{transition:opacity .2s}
+.fade-enter-from,.fade-leave-to{opacity:0}
+.slide-enter-active,.slide-leave-active{transition:transform .25s cubic-bezier(.4,0,.2,1)}
+.slide-enter-from,.slide-leave-to{transform:translateX(-100%)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;z-index:300}
+.modal-content{background:var(--bg-secondary);border:1px solid var(--border);border-radius:1.25rem 1.25rem 0 0;padding:1.5rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.picker-wheel{position:fixed;bottom:0;left:0;right:0;background:var(--bg-primary);border:1px solid var(--border);border-top-left-radius:1.5rem;border-top-right-radius:1.5rem;padding:1.5rem;z-index:400;max-height:85vh;overflow-y:auto;display:flex;flex-direction:column}
+.picker-container{height:200px;position:relative;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,transparent,black 25%,black 75%,transparent);mask-image:linear-gradient(to bottom,transparent,black 25%,black 75%,transparent);flex-shrink:0}
+.picker-column{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch}
+.picker-column::-webkit-scrollbar{display:none}
+.picker-item{height:50px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font-family:'IBM Plex Mono',monospace;font-size:1.4rem;font-weight:500;opacity:.2;transition:opacity .15s,font-size .15s;color:var(--text-primary)}
+.picker-item.active{opacity:1;font-size:2rem;font-weight:700;color:var(--text-primary)}
+.picker-center-line{position:absolute;top:50%;left:10%;right:10%;height:50px;transform:translateY(-50%);border-top:1px solid #3b82f6;border-bottom:1px solid #3b82f6;pointer-events:none;border-radius:6px;background:rgba(59,130,246,.04)}
+.result-block{border-left:3px solid;padding:.75rem 1rem;border-radius:0 .5rem .5rem 0;margin:.25rem 0}
+.result-critical{border-color:#ef4444;background:rgba(239,68,68,.07)}
+.result-warning{border-color:#f59e0b;background:rgba(245,158,11,.07)}
+.result-good{border-color:#22c55e;background:rgba(34,197,94,.07)}
+.result-info{border-color:#3b82f6;background:rgba(59,130,246,.07)}
+.result-excess{border-color:#8b5cf6;background:rgba(139,92,246,.07)}
+.weed-list-item{padding:.4rem .75rem;border-radius:.375rem;font-size:.75rem;cursor:pointer;display:flex;align-items:center;gap:.4rem;transition:background .1s;border:1px solid transparent}
+.weed-list-item:hover{background:var(--bg-tertiary)}
+.weed-list-item.selected{background:rgba(59,130,246,.15);border-color:#3b82f6}
+.depth-step-indicator{display:flex;gap:.5rem;margin-bottom:1rem}
+.depth-step{flex:1;height:3px;border-radius:9999px;background:var(--border);transition:background .3s}
+.depth-step.active{background:#3b82f6}
+.depth-step.done{background:#22c55e}
+.note-bubble{background:var(--bg-secondary);border:1px solid var(--border);border-radius:.875rem .875rem .875rem .2rem;padding:.75rem 1rem;position:relative}
+.note-bubble.system-bubble{background:rgba(59,130,246,.06);border-color:rgba(59,130,246,.18);border-radius:.875rem .875rem .2rem .875rem}
+.note-bubble.ec-bubble{background:rgba(34,197,94,.06);border-color:rgba(34,197,94,.2);border-radius:.875rem .875rem .2rem .875rem}
+.loc-dot{width:14px;height:14px;border-radius:50%;border:2.5px solid rgba(255,255,255,.8);box-shadow:0 0 0 3px rgba(59,130,246,.3),0 0 12px rgba(59,130,246,.5);animation:pulse-dot 2s ease-in-out infinite;position:relative;z-index:2}
+@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 3px rgba(59,130,246,.3),0 0 12px rgba(59,130,246,.5)}50%{box-shadow:0 0 0 6px rgba(59,130,246,.15),0 0 20px rgba(59,130,246,.7)}}
+.tag-chip{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .5rem;border-radius:9999px;font-size:.65rem;font-weight:600;font-family:'IBM Plex Mono',monospace;letter-spacing:.03em}
+.loading-ring{width:20px;height:20px;border:2px solid rgba(59,130,246,.3);border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sidebar-note-item{padding:.6rem .75rem;border-radius:.5rem;cursor:pointer;transition:background .1s;display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--text-secondary)}
+.sidebar-note-item:hover{background:var(--bg-secondary)}
+.sidebar-note-item.active{background:var(--bg-tertiary);color:var(--text-primary)}
+.folder-item{padding:.6rem .75rem;border-radius:.5rem;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:#fff}
+.folder-item:hover{filter:brightness(1.1)}
+.folder-item.expanded{filter:brightness(1.15)}
+input,textarea,select{color-scheme:inherit;background:transparent;color:inherit}
+.light-mode input, .light-mode textarea, .light-mode select{color-scheme:light}
+.dark-mode-vars input, .dark-mode-vars textarea, .dark-mode-vars select{color-scheme:dark}
+.app-surface{background:var(--bg-primary)}
+.app-card{background:var(--bg-secondary);border-color:var(--border)}
+.app-text{color:var(--text-primary)}
+.app-text-muted{color:var(--text-muted)}
+.app-border{border-color:var(--border)}
+.app-input{background:var(--bg-tertiary);border-color:var(--border);color:var(--text-primary)}
+.app-btn-secondary{background:var(--bg-tertiary);border-color:var(--border);color:var(--text-secondary)}
+.app-btn-secondary:hover{filter:brightness(1.1)}
+.settings-fab{border-radius:50%;background:var(--bg-secondary);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:100;transition:all .2s}
+.settings-fab:hover{filter:brightness(1.05);transform:scale(1.05)}
+.ec-warning-bar{border-radius:.5rem;padding:.5rem .75rem;font-size:.7rem;font-weight:600;display:flex;align-items:center;gap:.5rem}
+.sidebar-bg{background:var(--bg-primary);border-color:var(--border)}
+.header-bg{background:var(--bg-primary);border-color:var(--border)}
+.footer-bg{background:var(--bg-primary);border-color:var(--border)}
+.input-area{background:var(--bg-secondary);border-color:var(--border)}
+select option{background:var(--bg-secondary);color:var(--text-primary)}
+</style>
+</head>
+<body class="overflow-hidden">
+<div id="app" v-cloak :class="isDark ? 'dark-mode-vars' : 'light-mode'" class="flex h-screen w-full relative app-surface">
+
+<!-- Toast -->
+<transition name="fade">
+<div v-if="toast.show" class="fixed top-4 left-1/2 -translate-x-1/2 z-[500] app-card border px-5 py-2.5 rounded-full shadow-2xl text-sm font-medium flex items-center gap-2 app-text">
+  <span>{{ toast.icon }}</span> {{ toast.message }}
+</div>
+</transition>
+
+<!-- ═══════════════ MODAL ═══════════════ -->
+<transition name="fade">
+<div v-if="modal.show" class="modal-overlay z-99999" @click.self="closeModal">
+<div class="modal-content z-99999">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-base font-semibold app-text">{{ modal.title }}</h3>
+    <button @click="closeModal" class="w-7 h-7 flex items-center justify-center rounded-full app-btn-secondary border text-sm">✕</button>
+  </div>
+
+  <!-- Create Folder -->
+  <div v-if="modal.type === 'createFolder'">
+    <input ref="folderNameInput" v-model="modal.folderName" placeholder="Folder name" class="w-full p-3 app-input border rounded-lg mb-4 text-sm">
+    <div class="flex gap-2 mb-2">
+      <div v-for="color in folderColors" :key="color" @click="modal.selectedColor = color"
+        class="w-8 h-8 rounded-full cursor-pointer transition-transform hover:scale-110"
+        :style="{background: color, outline: modal.selectedColor === color ? '3px solid var(--text-primary)' : '3px solid transparent', outlineOffset:'2px'}"></div>
+    </div>
+  </div>
+
+  <!-- EC Reading Modal -->
+  <div v-if="modal.type === 'ecReading'" class="space-y-3 mb-4">
+    <div class="text-xs app-text-muted mb-2">Enter EC value and optionally additional soil parameters for detailed interpretation.</div>
+    <!-- Tree Type -->
+    <div>
+      <label class="text-[10px] uppercase tracking-widest app-text-muted block mb-1">Tree Type</label>
+      <div class="grid grid-cols-3 gap-2">
+        <button v-for="t in treeTypes" :key="t.id" @click="ecForm.treeType = t.id"
+          :class="ecForm.treeType === t.id ? 'border-blue-500 bg-blue-500/10 text-blue-400' : 'border app-border app-text-muted'"
+          class="py-2 rounded-lg text-xs font-bold border transition-all flex flex-col items-center gap-1">
+          <span class="text-lg">{{ t.icon }}</span>{{ t.name }}
+        </button>
+      </div>
+    </div>
+    <!-- EC Value -->
+    <div>
+      <label class="text-[10px] uppercase tracking-widest app-text-muted block mb-1">EC Value (µS/cm) <span class="text-red-400">*</span></label>
+      <input type="number" v-model.number="ecForm.ec" placeholder="e.g. 850" class="w-full p-3 app-input border rounded-lg text-sm font-mono">
+    </div>
+    <!-- Fertility -->
+    <div>
+      <label class="text-[10px] uppercase tracking-widest app-text-muted block mb-1">Fertility Probe (µS/cm) <span class="text-zinc-500">optional ±100</span></label>
+      <input type="number" v-model.number="ecForm.fertility" placeholder="e.g. 920" class="w-full p-3 app-input border rounded-lg text-sm font-mono">
+    </div>
+    <!-- Optional params -->
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="text-[10px] uppercase tracking-widest app-text-muted block mb-1">Moisture % <span class="text-zinc-500">opt.</span></label>
+        <input type="number" v-model.number="ecForm.moisture" placeholder="e.g. 45" class="w-full p-2 app-input border rounded-lg text-xs font-mono">
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-widest app-text-muted block mb-1">pH <span class="text-zinc-500">opt. ±0.5</span></label>
+        <input type="number" step="0.1" v-model.number="ecForm.ph" placeholder="e.g. 7.2" class="w-full p-2 app-input border rounded-lg text-xs font-mono">
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-widest app-text-muted block mb-1">Soil Temp °C <span class="text-zinc-500">opt. ±1</span></label>
+        <input type="number" step="0.5" v-model.number="ecForm.soilTemp" placeholder="e.g. 22" class="w-full p-2 app-input border rounded-lg text-xs font-mono">
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-widest app-text-muted block mb-1">Env. Humidity % <span class="text-zinc-500">opt.</span></label>
+        <input type="number" v-model.number="ecForm.envHumidity" placeholder="e.g. 60" class="w-full p-2 app-input border rounded-lg text-xs font-mono">
+      </div>
+    </div>
+    <!-- Compare with other trees (for irrigation uniformity) -->
+    <div>
+      <label class="text-[10px] uppercase tracking-widest app-text-muted block mb-1">Other tree EC readings (comma sep.) <span class="text-zinc-500">opt. for uniformity check</span></label>
+      <input v-model="ecForm.otherReadings" placeholder="e.g. 800, 750, 1100, 900" class="w-full p-2 app-input border rounded-lg text-xs font-mono">
+    </div>
+  </div>
+
+  <!-- Confirm -->
+  <div v-if="modal.type === 'confirm'" class="mb-4">
+    <p class="text-sm app-text">{{ modal.message }}</p>
+    <p v-if="modal.action === 'deleteFolder'" class="text-xs text-red-400 mt-2">⚠️ All notes inside will be moved to Trash.</p>
+  </div>
+
+  <!-- Weed Picker -->
+  <div v-if="modal.type === 'weedPicker'" class="mb-2">
+    <input v-model="weedSearch" placeholder="Search weeds..." class="w-full p-2.5 app-input border rounded-lg mb-3 text-sm">
+    <div class="max-h-64 overflow-y-auto custom-scrollbar space-y-1">
+      <div v-for="weed in filteredWeedList" :key="weed" @click="toggleWeed(weed)"
+        class="weed-list-item" :class="{selected: modal.selectedWeeds.includes(weed)}">
+        <span class="text-green-400">🌿</span>
+        <span class="flex-1 app-text">{{ weed.split(' - ')[0] }}</span>
+        <span class="app-text-muted text-[10px] truncate max-w-[100px]">{{ weed.split(' - ')[1] }}</span>
+        <span v-if="modal.selectedWeeds.includes(weed)" class="text-blue-400 ml-1">✓</span>
+      </div>
+    </div>
+    <div v-if="modal.selectedWeeds.length > 0" class="mt-3 flex flex-wrap gap-1.5">
+      <span v-for="w in modal.selectedWeeds" :key="w" class="tag-chip bg-green-900/40 text-green-300 border border-green-700/50">
+        {{ w.split(' - ')[0] }} <button @click="toggleWeed(w)" class="ml-1 opacity-60 hover:opacity-100">✕</button>
+      </span>
+    </div>
+  </div>
+
+  <!-- Note Detail -->
+  <div v-if="modal.type === 'noteDetail'" class="space-y-3 mb-4">
+    <div class="grid grid-cols-2 gap-2 text-xs">
+      <div class="app-input border rounded-lg p-2.5">
+        <div class="app-text-muted mb-1">Location</div>
+        <div class="font-mono app-text">{{ modal.noteData?.location?.lat?.toFixed(5) }}, {{ modal.noteData?.location?.lon?.toFixed(5) }}</div>
+      </div>
+      <div class="app-input border rounded-lg p-2.5">
+        <div class="app-text-muted mb-1">Date</div>
+        <div class="font-mono app-text">{{ modal.noteData ? formatTime(modal.noteData.timestamp) : '' }}</div>
+      </div>
+    </div>
+    <!-- EC detail view -->
+    <div v-if="modal.noteData?.ecData">
+      <div class="font-bold text-xs app-text mb-2">EC Reading – {{ modal.noteData.ecData.treeLabel }}</div>
+      <div class="space-y-1.5 max-h-72 overflow-y-auto custom-scrollbar">
+        <div v-for="alert in modal.noteData.ecData.alerts" :key="alert.msg"
+          class="result-block text-xs" :class="'result-'+alert.level">
+          <div class="font-bold mb-0.5">{{ alert.title }}</div>
+          <div class="app-text">{{ alert.msg }}</div>
+        </div>
+      </div>
+    </div>
+    <!-- N detail view -->
+    <div v-if="modal.noteData?.nitrogenData" class="result-block" :style="{'borderColor': modal.noteData.nitrogenData.color,'background': modal.noteData.nitrogenData.color + '11'}">
+      <div class="text-xs font-bold mb-1 app-text">Nitrogen: {{ modal.noteData.nitrogenData.d4 }}/{{ modal.noteData.nitrogenData.d8 }}/{{ modal.noteData.nitrogenData.d12 }} mg/kg</div>
+      <div class="text-xs app-text">{{ modal.noteData.nitrogenData.interpretation }}</div>
+    </div>
+  </div>
+
+  <!-- Autosave Config -->
+  <div v-if="modal.type === 'autosaveConfig'" class="mb-4">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-sm font-medium app-text">Enable Autosave</span>
+      <button @click="autosaveEnabled = !autosaveEnabled" :class="autosaveEnabled ? 'bg-blue-600' : 'bg-zinc-500/40'" class="w-12 h-6 rounded-full transition-colors relative">
+        <div :class="autosaveEnabled ? 'translate-x-6' : 'translate-x-0'" class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform shadow"></div>
+      </button>
+    </div>
+    <div v-if="autosaveEnabled">
+      <label class="text-xs app-text-muted block mb-2">Select Target Note</label>
+      <select v-model="autosaveNoteId" class="w-full app-input border rounded-lg p-2 text-sm">
+        <option value="">None</option>
+        <option v-for="note in notes.filter(n => !n.isDeleted && n.mode==='farm')" :key="note.id" :value="note.id">{{ note.title || 'Untitled' }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Reading Settings -->
+  <div v-if="modal.type === 'readingSettings'" class="space-y-3 z-999 max-h-[60vh] overflow-y-auto custom-scrollbar mb-4">
+    <div>
+      <label class="text-[10px] app-text-muted uppercase block mb-1">BBCH Stage</label>
+      <select v-model="readingSettings.bbch" class="w-full app-input border rounded-lg px-2.5 py-2 text-xs">
+        <option value="TILLERING">Tallage (20-29)</option><option value="GERMINATION">Germination (00-09)</option>
+        <option value="SEEDLING">Plantule (10-19)</option><option value="STEM_ELONGATION">Montaison (30-39)</option>
+        <option value="BOOTING">Gonflement (40-49)</option><option value="HEADING">Épiaison (50-59)</option>
+        <option value="FLOWERING">Floraison (60-69)</option><option value="GRAIN_FILLING">Remplissage (70-79)</option>
+        <option value="MATURATION">Maturation (80-89)</option>
+      </select>
+    </div>
+    <div>
+      <label class="text-[10px] app-text-muted uppercase block mb-1">Variety</label>
+      <select v-model="readingSettings.variety" class="w-full app-input border rounded-lg px-2.5 py-2 text-xs">
+        <option value="om5">Om 5</option><option value="KARIM">Karim</option><option value="NASR">Nasr</option>
+      </select>
+    </div>
+    <div>
+      <label class="text-[10px] app-text-muted uppercase block mb-1">Objective (t/ha)</label>
+      <select v-model="readingSettings.objective" class="w-full app-input border rounded-lg px-2.5 py-2 text-xs">
+        <option value="VERY_HIGH">Très élevé (4.5-6)</option><option value="HIGH">Élevé (3.5-4.5)</option>
+        <option value="MEDIUM">Moyen (2.5-3.5)</option><option value="LOW">Faible (1.5-2.5)</option>
+      </select>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="text-[10px] app-text-muted uppercase block mb-1">pH</label>
+        <input type="number" step="0.1" v-model.number="readingSettings.ph" class="w-full app-input border rounded-lg px-2.5 py-2 text-xs font-mono">
+      </div>
+      <div>
+        <label class="text-[10px] app-text-muted uppercase block mb-1">Soil Humidity</label>
+        <input type="number" step="0.01" v-model.number="readingSettings.humidity" class="w-full app-input border rounded-lg px-2.5 py-2 text-xs font-mono">
+      </div>
+    </div>
+    <div>
+      <label class="text-[10px] app-text-muted uppercase block mb-1">Previous Crop</label>
+      <select v-model="readingSettings.previousCrop" class="w-full app-input border rounded-lg px-2.5 py-2 text-xs">
+        <option value="LEGUME">Légumineuse</option><option value="CEREAL">Céréale</option>
+        <option value="FALLOW">Jachère</option><option value="MAIZE">Maïs</option>
+      </select>
+    </div>
+    <div>
+      <label class="text-[10px] app-text-muted uppercase block mb-1">Expected Rain (7 days, mm)</label>
+      <div class="flex gap-2">
+        <input type="number" v-model.number="readingSettings.expectedRain" class="flex-1 app-input border rounded-lg px-2.5 py-2 text-xs font-mono">
+        <button @click="fillRainFromWeather" class="px-3 py-2 app-btn-secondary border rounded-lg text-xs">Auto</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex gap-2">
+    <button @click="closeModal" class="flex-1 py-2.5 rounded-lg app-btn-secondary border text-sm font-medium transition-colors">Cancel</button>
+    <button v-if="modal.type === 'ecReading'" @click="saveEcReading" :disabled="!ecForm.ec" class="flex-1 py-2.5 rounded-lg bg-green-600 hover:bg-green-500 disabled:opacity-40 text-white text-sm font-medium transition-colors">Analyze EC</button>
+    <button v-else-if="modal.type === 'readingSettings'" @click="closeModal" class="flex-1 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium">Save</button>
+    <button v-else-if="modal.type !== 'noteDetail' && modal.type !== 'autosaveConfig'" @click="modalConfirm" class="flex-1 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors">
+      {{ modal.type === 'weedPicker' ? `Add ${modal.selectedWeeds.length} Weeds` : 'Confirm' }}
+    </button>
+    <button v-if="modal.type === 'noteDetail' || modal.type === 'autosaveConfig'" @click="closeModal" class="flex-1 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium">Close</button>
+  </div>
+</div>
+</div>
+</transition>
+
+<!-- Nitrogen Picker Wheel -->
+<transition name="fade">
+<div v-if="showNitrogenPicker" class="modal-overlay" @click.self="!isAddingReading && closeNitrogenPicker()">
+<div class="picker-wheel">
+  <div class="flex justify-between items-center mb-3">
+    <div>
+      <h3 class="text-base font-semibold app-text">Soil Nitrogen Reading</h3>
+      <p class="text-xs app-text-muted font-mono mt-0.5">{{ pickerDepthLabel }} depth</p>
+    </div>
+      <!-- Settings FAB -->
+
+    <button @click="closeNitrogenPicker" :disabled="isAddingReading" class="w-8 h-8 flex items-center justify-center rounded-full app-btn-secondary">✕</button>
+  </div>
+  <div class="depth-step-indicator">
+    <div class="depth-step" :class="{active: currentDepthStep===0, done: currentDepthStep>0}"></div>
+    <div class="depth-step" :class="{active: currentDepthStep===1, done: currentDepthStep>1}"></div>
+    <div class="depth-step" :class="{active: currentDepthStep===2}"></div>
+  </div>
+  <div class="flex justify-between text-[10px] app-text-muted font-mono -mt-2 mb-4">
+    <span :class="currentDepthStep===0?'text-blue-400 font-bold':currentDepthStep>0?'text-green-400':''">4cm</span>
+    <span :class="currentDepthStep===1?'text-blue-400 font-bold':currentDepthStep>1?'text-green-400':''">8cm</span>
+    <span :class="currentDepthStep===2?'text-blue-400 font-bold':''">12cm</span>
+  </div>
+  <div class="picker-container mb-3" :class="{'opacity-40 pointer-events-none': isAddingReading}">
+    <div class="picker-center-line"></div>
+    <div ref="pickerColumn" class="picker-column" @scroll="updatePickerValue">
+      <div style="height:75px"></div>
+      <div v-for="n in 151" :key="n-1" class="picker-item" :class="{active: currentPickerValue === n-1}">{{ n-1 }}</div>
+      <div style="height:75px"></div>
+    </div>
+  </div>
+  <div class="text-center mb-4">
+    <span class="text-3xl font-mono font-bold app-text">{{ currentPickerValue }}</span>
+    <span class="app-text-muted text-sm ml-1">mg/kg</span>
+  </div>
+  <div v-if="isAddingReading" class="flex justify-center items-center py-3 gap-3">
+    <div class="loading-ring"></div>
+    <span class="text-sm app-text-muted">Getting GPS location...</span>
+  </div>
+  <div v-else class="flex gap-2">
+    <button v-if="currentDepthStep > 0" @click="previousPickerStep" class="px-4 py-3 app-btn-secondary border rounded-xl font-medium text-sm">← Back</button>
+    <button @click="confirmPickerValue" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold">
+      {{ currentDepthStep === 0 ? 'Next: 8cm →' : currentDepthStep === 1 ? 'Next: 12cm →' : '✓ Save Reading' }}
+    </button>
+      <div v-if="activeNote?.mode==='farm' && farmTab==='feed'" class="px-4 py-3 app-btn-secondary border rounded-xl font-medium text-sm" @click="modal.show=true;modal.type='readingSettings';modal.title='⚙️ Reading Settings'" title="Settings">
+    <svg class="w-6 h-6 app-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+  </div>
+  </div>
+</div>
+</div>
+</transition>
+
+<!-- Map Note Modal -->
+<transition name="fade">
+<div v-if="showMapNoteModal" class="modal-overlay z-9999" @click.self="showMapNoteModal=false">
+<div class="modal-content z-999999">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-base font-semibold app-text">📍 Add Field Note</h3>
+    <button @click="showMapNoteModal=false" class="w-7 h-7 flex items-center justify-center rounded-full app-btn-secondary border text-sm">✕</button>
+  </div>
+  <div class="text-xs font-mono app-text-muted mb-3">{{ mapNoteForm.lat?.toFixed(6) }}, {{ mapNoteForm.lng?.toFixed(6) }}</div>
+  <textarea v-model="mapNoteForm.text" placeholder="Write your field note..." rows="3" class="w-full app-input border rounded-lg p-3 text-sm resize-none mb-3"></textarea>
+  <div class="flex gap-2 mb-3">
+    <button @click="openWeedPickerForMapNote" class="flex items-center gap-2 px-3 py-2 bg-green-900/30 border border-green-700/50 rounded-lg text-xs text-green-300 hover:bg-green-900/50 transition-colors">
+      🌿 Weeds {{ mapNoteForm.weeds?.length > 0 ? `(${mapNoteForm.weeds.length})` : '' }}
+    </button>
+    <button @click="triggerMapNoteCamera" class="flex items-center gap-2 px-3 py-2 app-btn-secondary border rounded-lg text-xs transition-colors">📷 Photo</button>
+  </div>
+  <button @click="saveMapNote" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold text-sm">Save Note</button>
+  <input type="file" ref="mapNoteCameraInput" accept="image/*" capture="environment" class="hidden" @change="handleMapNoteImage">
+</div>
+</div>
+</transition>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<transition name="slide">
+<aside v-if="sidebarOpen" class="fixed inset-0 z-50 sidebar-bg flex flex-col w-full md:w-72 md:relative md:border-r md:inset-auto" style="border-color:var(--border)">
+  <div class="p-5 pb-2 shrink-0" style="border-bottom:1px solid var(--border)">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs" style="background:var(--accent)">BC</div>
+        <div>
+          <div class="text-sm font-bold tracking-tight app-text">BC FARM</div>
+          <div class="text-[10px] app-text-muted font-mono">Ben Chiboub Software</div>
+        </div>
+      </div>
+      <button @click="sidebarOpen=false" class="md:hidden p-1.5 rounded-lg app-btn-secondary app-text-muted">✕</button>
+    </div>
+    <div class="mt-3">
+      <input v-model="searchQuery" placeholder="Search notes..." class="w-full app-input border rounded-lg px-3 py-2 text-xs placeholder-zinc-500">
+    </div>
+  </div>
+
+  <div class="flex-1 overflow-y-auto custom-scrollbar p-3">
+    <div v-if="viewMode === 'trash'">
+      <div v-if="trashedNotes.length === 0" class="text-center py-10 app-text-muted">
+        <div class="text-3xl mb-2">🗑️</div><div class="text-xs">Trash is empty</div>
+      </div>
+      <div v-else class="space-y-1">
+        <div class="flex justify-between items-center px-1 mb-2">
+          <span class="text-[10px] font-bold uppercase app-text-muted tracking-widest">Trash</span>
+          <button @click="emptyTrash" class="text-[10px] text-red-400 hover:text-red-300">Empty</button>
+        </div>
+        <div v-for="note in trashedNotes" :key="note.id" @click="openNote(note.id)" class="sidebar-note-item" :class="{active: activeNoteId===note.id}">
+          <span class="text-sm">🗑️</span>
+          <span class="truncate flex-1">{{ note.title || 'Untitled' }}</span>
+          <button @click.stop="permanentlyDeleteNote(note.id)" class="app-text-muted hover:text-red-400 text-xs">✕</button>
+        </div>
+      </div>
+    </div>
+    <div v-else>
+      <div v-for="folder in folders" :key="folder.id" class="mb-2">
+        <div class="folder-item mb-1" @click="folder.expanded = !folder.expanded" :style="{background: folder.color||'#3b82f6'}" :class="{expanded: folder.expanded}">
+          <span class="text-[10px] transition-transform duration-200" :class="{'rotate-90': folder.expanded}">▶</span>
+          <span v-if="editingFolderId !== folder.id" class="text-xs font-medium truncate flex-1">{{ folder.name }}</span>
+          <input v-else v-model="folder.name" @blur="editingFolderId=null" @click.stop @keydown.enter="editingFolderId=null" class="bg-transparent border-b border-white/30 text-xs w-full outline-none">
+          <div class="flex gap-1">
+            <button @click.stop="createNote(folder.id)" class="w-5 h-5 flex items-center justify-center rounded text-white/80 hover:text-white hover:bg-white/20 text-sm">+</button>
+            <button @click.stop="editingFolderId=folder.id" class="w-5 h-5 flex items-center justify-center rounded text-white/80 hover:text-white hover:bg-white/20 text-xs">✎</button>
+            <button @click.stop="openDeleteFolderModal(folder.id)" class="w-5 h-5 flex items-center justify-center rounded text-white/80 hover:text-white hover:bg-white/20 text-xs">✕</button>
+          </div>
+        </div>
+        <div v-if="folder.expanded || searchQuery" class="mt-0.5 ml-3 pl-2 space-y-0.5" style="border-left:1px solid var(--border)">
+          <div v-for="note in getFolderNotes(folder.id)" :key="note.id" @click="openNote(note.id)"
+            @touchstart.passive="startHoldTimer($event, note.id)" @touchend="cancelHoldTimer" @touchmove="cancelHoldTimer"
+            @contextmenu.prevent="openDeleteNoteModal(note.id)"
+            class="sidebar-note-item" :class="{active: activeNoteId===note.id}">
+            <span class="text-xs">🌾</span>
+            <span class="truncate flex-1">{{ note.title || 'Untitled' }}</span>
+            <span v-if="note.farmReadings?.length" class="text-[9px] font-mono text-blue-400">{{ note.farmReadings.length }}</span>
+          </div>
+          <div v-if="getFolderNotes(folder.id).length === 0" class="text-[10px] app-text-muted px-2 py-1">Empty folder</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-3 flex items-center justify-between shrink-0" style="border-top:1px solid var(--border)">
+    <button @click="openCreateFolderModal" class="p-2 rounded-lg app-btn-secondary text-xs font-bold">+ Folder</button>
+    <div class="flex items-center gap-1">
+      <button @click="modal.show=true;modal.type='autosaveConfig';modal.title='Autosave'" class="p-2 rounded-lg app-btn-secondary" :class="autosaveEnabled ? 'text-blue-400' : 'app-text-muted'" title="Autosave">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+      </button>
+      <button @click="exportData" class="p-2 rounded-lg app-btn-secondary app-text-muted" title="Export JSON">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+      </button>
+      <button @click="setViewMode(viewMode==='trash'?'normal':'trash')" :class="viewMode==='trash'?'text-red-400':'app-text-muted'" class="p-2 rounded-lg app-btn-secondary">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+      </button>
+      <button @click="toggleTheme" class="p-2 rounded-lg app-btn-secondary app-text-muted">
+        <svg v-if="isDark" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+</transition>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main class="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden app-surface">
+
+  <!-- Header -->
+  <header class="h-14 flex items-center gap-3 px-4 shrink-0 header-bg" style="border-bottom:1px solid var(--border)">
+    <button @click="sidebarOpen=!sidebarOpen" class="p-1.5 rounded-lg app-btn-secondary app-text-muted">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <template v-if="activeNote && !activeNote.isDeleted">
+      <input ref="titleInput" v-model="activeNote.title" placeholder="Untitled" @keydown.enter.prevent="()=>{}" class="flex-1 bg-transparent font-semibold text-sm outline-none app-text min-w-0" style="placeholder-color:var(--text-muted)">
+      <!-- Feed/Map tabs -->
+      <div class="flex items-center gap-1 rounded-lg p-0.5" style="background:var(--bg-tertiary)">
+        <button @click="farmTab='feed'" :class="farmTab==='feed'?'text-white':'app-text-muted hover:app-text'" class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase transition-all" :style="farmTab==='feed'?'background:var(--bg-secondary)':''">Feed</button>
+        <button @click="farmTab='map';initMap()" :class="farmTab==='map'?'text-white':'app-text-muted hover:app-text'" class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase transition-all" :style="farmTab==='map'?'background:var(--bg-secondary)':''">Map</button>
+      </div>
+      <!-- PDF Export -->
+      <button @click="exportToPDF" class="p-1.5 rounded-lg app-btn-secondary app-text-muted" title="Export PDF">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 48 48"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M35.213 35.185v5.418a1.897 1.897 0 0 1-1.898 1.897H7.7a1.903 1.903 0 0 1-1.898-1.897V7.397c0-1.043.854-1.897 1.898-1.897h17.077v8.538c0 1.044.854 1.898 1.897 1.898h8.539v4.706M24.779 5.5l10.436 10.436" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M21.27 31.71v-7.59h2.485c1.405 0 2.543 1.14 2.543 2.549s-1.138 2.549-2.543 2.549H21.27m7.027 2.492v-7.59h1.708a3.32 3.32 0 0 1 3.32 3.32v.949a3.32 3.32 0 0 1-3.32 3.32zm6.974-3.795h2.467m-2.467 3.794V24.12h3.795" stroke-width="1.7"/><rect width="25.083" height="14.55" x="17.114" y="20.64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" rx="1.897" ry="1.897" stroke-width="1.7"/></svg>
+      </button>
+    </template>
+    <template v-if="!activeNote"><span class="app-text-muted text-sm">Select or create a note</span></template>
+    <!-- GPS -->
+    <div class="flex items-center gap-1.5 ml-auto" v-if="activeNote">
+      <div class="w-1.5 h-1.5 rounded-full" :class="gpsStatus==='ok'?'bg-green-500 shadow-[0_0_6px_#22c55e]':gpsStatus==='loading'?'bg-yellow-400 animate-pulse':'bg-red-500'"></div>
+      <span class="text-[10px] font-mono app-text-muted hidden sm:block">{{ gpsStatus==='ok'?`${userLat?.toFixed(3)},${userLng?.toFixed(3)}`:gpsStatus==='loading'?'…':'no gps' }}</span>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <div class="flex-1 overflow-hidden relative">
+
+    <!-- Map View -->
+    <div v-if="activeNote?.mode==='farm' && farmTab==='map'" class="h-full w-full">
+      <div id="farm-map" class="h-full w-full"></div>
+      <div class="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
+        <button @click="startNitrogenReading" class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg">+ N</button>
+        <button @click="openEcModal" class="flex items-center gap-2 px-4 py-2.5 bg-green-700 hover:bg-green-600 text-white rounded-xl text-xs font-bold shadow-lg">⚡ EC</button>
+        <button @click="enableMapNoteMode" class="flex items-center gap-2 px-4 py-2.5 app-btn-secondary border rounded-xl text-xs font-bold shadow-lg">📍 Note</button>
+      </div>
+      <div v-if="mapNoteMode" class="absolute top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg z-10">
+        Tap on map to place note
+      </div>
+    </div>
+
+    <!-- Feed View -->
+    <div v-else class="h-full flex flex-col">
+      <!-- Feed filter bar -->
+      <div v-if="activeNote" class="flex items-center gap-2 px-4 py-2 shrink-0" style="border-bottom:1px solid var(--border);background:var(--bg-secondary)">
+        <input v-model="feedSearch" placeholder="Search feed…" class="flex-1 bg-transparent text-xs outline-none app-text placeholder-zinc-500">
+        <div class="flex items-center gap-1">
+          <button @click="feedFilter='all'" :class="feedFilter==='all'?'bg-blue-600 text-white':'app-btn-secondary border app-text-muted'" class="px-2 py-1 rounded-md text-[10px] font-bold transition-all">All</button>
+          <button @click="feedFilter='ec'" :class="feedFilter==='ec'?'bg-green-600 text-white':'app-btn-secondary border app-text-muted'" class="px-2 py-1 rounded-md text-[10px] font-bold transition-all">EC</button>
+          <button @click="feedFilter='nitrogen'" :class="feedFilter==='nitrogen'?'bg-blue-600 text-white':'app-btn-secondary border app-text-muted'" class="px-2 py-1 rounded-md text-[10px] font-bold transition-all">N</button>
+          <button @click="feedFilter='text'" :class="feedFilter==='text'?'bg-zinc-600 text-white':'app-btn-secondary border app-text-muted'" class="px-2 py-1 rounded-md text-[10px] font-bold transition-all">Notes</button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto custom-scrollbar px-4 py-4" id="feed" ref="feedEl">
+        <div class="max-w-lg mx-auto flex flex-col gap-3 pb-28">
+          <div v-if="!activeNote" class="flex flex-col items-center justify-center h-64 app-text-muted">
+            <div class="text-4xl mb-3">🌿</div>
+            <div class="text-sm">Open or create a note to start</div>
+          </div>
+
+          <template v-if="activeNote">
+            <div v-for="(block, i) in filteredBlocks" :key="block.id">
+              <!-- Date separator -->
+              <div v-if="shouldShowDateFiltered(i)" class="flex justify-center my-3">
+                <span class="text-[10px] font-mono app-text-muted px-3 py-1 rounded-full" style="background:var(--bg-tertiary)">{{ formatDate(block.timestamp) }}</span>
+              </div>
+
+              <!-- EC block -->
+              <div v-if="block.type==='ec'" @click="openEcDetails(block)" class="note-bubble ec-bubble mb-1 cursor-pointer">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold font-mono shadow-lg" :style="{background: block.ecData.statusColor}">EC</div>
+                  <div class="flex-1">
+                    <div class="text-xs font-bold font-mono app-text">{{ block.ecData.ec }} µS/cm</div>
+                    <div class="text-[10px] app-text-muted">{{ block.ecData.treeLabel }}</div>
+                  </div>
+                  <div v-if="block.location" class="text-[9px] app-text-muted font-mono">📍{{ block.location.lat.toFixed(3) }}</div>
+                </div>
+                <!-- Key status line -->
+                <div class="text-xs font-semibold mb-1" :style="{color: block.ecData.statusColor}">{{ block.ecData.statusLabel }}</div>
+                <!-- Alerts summary -->
+                <div class="space-y-1">
+                  <div v-for="alert in block.ecData.alerts.slice(0,3)" :key="alert.title" class="ec-warning-bar text-[10px]"
+                    :class="{'bg-red-500/10 text-red-400':alert.level==='critical','bg-yellow-500/10 text-yellow-400':alert.level==='warning','bg-green-500/10 text-green-400':alert.level==='good','bg-blue-500/10 text-blue-400':alert.level==='info','bg-purple-500/10 text-purple-400':alert.level==='excess'}">
+                    {{ alert.title }}
+                  </div>
+                </div>
+                <div class="mt-1.5 text-[10px] app-text-muted text-right">Tap for details</div>
+              </div>
+
+              <!-- Nitrogen block -->
+              <div v-else-if="block.type==='nitrogen'" @click="openDiagnosticDetails(block)" class="note-bubble system-bubble mb-1 cursor-pointer">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold font-mono shadow-lg" :style="{background: block.nitrogenData.color}">N</div>
+                  <div class="flex-1">
+                    <div class="text-xs font-bold font-mono app-text">{{ block.nitrogenData.d4 }} / {{ block.nitrogenData.d8 }} / {{ block.nitrogenData.d12 }} mg/kg</div>
+                    <div class="text-[10px] app-text-muted">4cm · 8cm · 12cm</div>
+                  </div>
+                  <div v-if="block.location" class="text-[9px] app-text-muted font-mono">📍{{ block.location.lat.toFixed(3) }}</div>
+                </div>
+                <div class="text-xs font-semibold mb-0.5" :style="{color: block.nitrogenData.color}">{{ block.nitrogenData.label }}</div>
+                <div class="text-[11px] app-text-muted">{{ block.nitrogenData.action }}</div>
+                <div v-if="block.nitrogenData.ammonitrate > 0" class="mt-2 rounded-lg px-2.5 py-1.5 text-[11px] font-mono flex items-center justify-between" style="background:rgba(59,130,246,.1)">
+                  <span class="app-text">Ammonitrate</span>
+                  <span class="font-bold text-blue-400">{{ block.nitrogenData.ammonitrate }} kg/ha</span>
+                </div>
+                <div class="mt-1 text-[10px] app-text-muted text-right">Tap for details</div>
+              </div>
+
+              <!-- Map note block -->
+              <div v-else-if="block.type==='mapnote'" class="note-bubble system-bubble mb-1">
+                <div class="flex items-center gap-2 mb-1.5">
+                  <span class="text-sm">📍</span>
+                  <div class="text-[10px] font-mono app-text-muted">{{ block.location?.lat?.toFixed(5) }}, {{ block.location?.lon?.toFixed(5) }}</div>
+                  <div class="text-[10px] font-mono app-text-muted ml-auto">{{ formatTime(block.timestamp) }}</div>
+                </div>
+                <div v-if="block.text" class="text-xs app-text mb-1.5">{{ block.text }}</div>
+                <div v-if="block.weeds?.length" class="flex flex-wrap gap-1">
+                  <span v-for="w in block.weeds" :key="w" class="tag-chip bg-green-900/30 text-green-300 border border-green-700/40">{{ w.split(' - ')[0] }}</span>
+                </div>
+                <img v-if="block.image" :src="block.image" class="mt-2 rounded-lg max-h-40 object-cover w-full">
+              </div>
+
+              <!-- Text block -->
+              <div v-else class="note-bubble mb-1 group relative">
+                <div v-if="block.isEditing">
+                  <textarea :ref="el => el && setTextareaHeight(el)" v-model="block.text" @input="e=>setTextareaHeight(e.target)" @blur="block.isEditing=false"
+                    class="w-full bg-transparent resize-none text-xs outline-none app-text min-h-[40px]"></textarea>
+                </div>
+                <div v-else class="prose prose-invert prose-xs max-w-full text-xs leading-relaxed cursor-text app-text" @dblclick="block.isEditing=true" v-html="renderBlock(block)"></div>
+                <div class="absolute -bottom-5 right-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button @click="block.isEditing=true" class="text-[9px] app-text-muted hover:app-text">edit</button>
+                  <button @click="deleteBlock(activeNote.blocks.indexOf(block))" class="text-[9px] app-text-muted hover:text-red-400">del</button>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- Footer Input -->
+  <footer v-if="activeNote && !activeNote.isDeleted && (farmTab==='feed' || activeNote.mode!=='farm')" class="px-4 py-3 shrink-0 footer-bg" style="border-top:1px solid var(--border)">
+    <div class="max-w-lg mx-auto">
+      <div v-if="activeNote.mode==='farm'" class="flex gap-2 mb-2">
+        <button @click="startNitrogenReading" class="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-colors">
+          + N
+        </button>
+        <button @click="openEcModal" class="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-green-700 hover:bg-green-600 text-white rounded-xl text-xs font-bold transition-colors">
+          ⚡ EC
+        </button>
+        <button @click="openWeedPickerForFeed" class="flex items-center justify-center gap-1.5 px-3 py-2.5 app-btn-secondary border rounded-xl text-xs app-text-muted transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 256 256"><path fill="currentColor" d="M247.63 47.89a8 8 0 0 0-7.52-7.52c-51.76-3-93.32 12.74-111.18 42.22c-11.8 19.49-11.78 43.16-.16 65.74a71.3 71.3 0 0 0-14.17 27L98.33 159c7.82-16.33 7.52-33.35-1-47.49c-13.2-21.79-43.67-33.47-81.5-31.25a8 8 0 0 0-7.52 7.52c-2.23 37.83 9.46 68.3 31.25 81.5A45.8 45.8 0 0 0 63.44 176A54.6 54.6 0 0 0 87 170.33l25 25V224a8 8 0 0 0 16 0v-29.49a55.6 55.6 0 0 1 12.27-35a73.9 73.9 0 0 0 33.31 8.4a60.9 60.9 0 0 0 31.83-8.86c29.48-17.84 45.26-59.4 42.22-111.16M47.81 155.6C32.47 146.31 23.79 124.32 24 96c28.32-.24 50.31 8.47 59.6 23.81c4.85 8 5.64 17.33 2.46 26.94l-24.41-24.41a8 8 0 0 0-11.31 11.31l24.41 24.41c-9.61 3.18-18.93 2.39-26.94-2.46m149.31-10.22c-13.4 8.11-29.15 8.73-45.15 2l53.69-53.7a8 8 0 0 0-11.31-11.31L140.65 136c-6.76-16-6.15-31.76 2-45.15c13.94-23 47-35.82 89.33-34.83c.96 42.32-11.84 75.42-34.86 89.36"/></svg>
+          Weeds
+        </button>
+      </div>
+
+      <div class="flex items-end gap-1 rounded-xl px-3 py-2 input-area" style="border:1px solid var(--border)">
+        <textarea v-model="newMessage" ref="messageInput" @keydown.enter.exact.prevent="appendMessage"
+          @paste="handlePaste" @input="onInputChange" rows="1"
+          :placeholder="activeNote.mode==='farm'?'Add field note...':'Type a note...'"
+          class="flex-1 bg-transparent text-sm resize-none max-h-24 app-text outline-none py-1" style="placeholder-color:var(--text-muted)"></textarea>
+
+        <!-- Camera (opens camera, always visible) -->
+        <button v-if="!newMessage.trim()" @click="triggerCamera" class="p-1 transition-colors flex-shrink-0 mb-0.5 app-text-muted hover:app-text">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22px" height="22px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="13" r="3"/><path d="M9.778 21h4.444c3.121 0 4.682 0 5.803-.735a4.4 4.4 0 0 0 1.226-1.204c.749-1.1.749-2.633.749-5.697s0-4.597-.749-5.697a4.4 4.4 0 0 0-1.226-1.204c-.72-.473-1.622-.642-3.003-.702c-.659 0-1.226-.49-1.355-1.125A2.064 2.064 0 0 0 13.634 3h-3.268c-.988 0-1.839.685-2.033 1.636c-.129.635-.696 1.125-1.355 1.125c-1.38.06-2.282.23-3.003.702A4.4 4.4 0 0 0 2.75 7.667C2 8.767 2 10.299 2 13.364s0 4.596.749 5.697c.324.476.74.885 1.226 1.204C5.096 21 6.657 21 9.778 21Z"/><path stroke-linecap="round" d="M19 10h-1"/></g></svg>
+        </button>
+
+        <!-- Gallery (hidden while typing) -->
+        <button v-if="!newMessage.trim()" @click="triggerGallery" class="p-1 transition-colors flex-shrink-0 mb-0.5 app-text-muted hover:app-text">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22px" height="22px" viewBox="0 0 24 24"><path fill="currentColor" d="M18 8a2 2 0 1 1-4 0a2 2 0 0 1 4 0"/><path fill="currentColor" fill-rule="evenodd" d="M11.943 1.25h.114c2.309 0 4.118 0 5.53.19c1.444.194 2.584.6 3.479 1.494c.895.895 1.3 2.035 1.494 3.48c.19 1.411.19 3.22.19 5.529v.088c0 1.909 0 3.471-.104 4.743c-.104 1.28-.317 2.347-.795 3.235q-.314.586-.785 1.057c-.895.895-2.035 1.3-3.48 1.494c-1.411.19-3.22.19-5.529.19h-.114c-2.309 0-4.118 0-5.53-.19c-1.444-.194-2.584-.6-3.479-1.494c-.793-.793-1.203-1.78-1.42-3.006c-.215-1.203-.254-2.7-.262-4.558Q1.25 12.792 1.25 12v-.058c0-2.309 0-4.118.19-5.53c.194-1.444.6-2.584 1.494-3.479c.895-.895 2.035-1.3 3.48-1.494c1.411-.19 3.22-.19 5.529-.19m-5.33 1.676c-1.278.172-2.049.5-2.618 1.069c-.57.57-.897 1.34-1.069 2.619c-.174 1.3-.176 3.008-.176 5.386v.844l1.001-.876a2.3 2.3 0 0 1 3.141.104l4.29 4.29a2 2 0 0 0 2.564.222l.298-.21a3 3 0 0 1 3.732.225l2.83 2.547c.286-.598.455-1.384.545-2.493c.098-1.205.099-2.707.099-4.653c0-2.378-.002-4.086-.176-5.386c-.172-1.279-.5-2.05-1.069-2.62c-.57-.569-1.34-.896-2.619-1.068c-1.3-.174-3.008-.176-5.386-.176s-4.086.002-5.386.176" clip-rule="evenodd"/></svg>
+        </button>
+
+        <!-- Audio (hidden while typing) -->
+        <button v-if="!newMessage.trim()" @click="toggleRecording" :class="isRecording?'text-red-400 animate-pulse':'app-text-muted hover:app-text'" class="p-1 transition-colors flex-shrink-0 mb-0.5">
+          <svg class="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+        </button>
+
+        <!-- Send -->
+        <button @click="appendMessage" class="bg-blue-600 hover:bg-blue-500 text-white p-1.5 rounded-lg transition-colors flex-shrink-0 mb-0.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+        </button>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<!-- Hidden file inputs -->
+<input type="file" ref="cameraInput" accept="image/*" capture="environment" class="hidden" @change="handleImageUpload">
+<input type="file" ref="galleryInput" accept="image/*" class="hidden" @change="handleImageUpload">
+</div>
+
+<script>
+const { createApp, ref, computed, watch, nextTick, onMounted } = Vue;
+const MAPTILER_KEY = 'tsigPuYpbI3r7K3PZd1T';
+
+const TUNISIAN_WEEDS = [
+"Folle avoine - Khofane - Avena sterilis","Phalaris paradoxal - Zouane - Phalaris paradoxa",
+"Moutarde sauvage - Languiche - Sinapis arvensis","Chiendent officinal - Njem - Cynodon dactylon",
+"Souchet rond - Saâd - Cyperus rotundus","Liseron des champs - Leuwaya - Convolvulus arvensis",
+"Chénopode blanc - Lmokh - Chenopodium album","Coquelicot - Guerounel - Papaver rhoeas",
+"Pourpier - Rejla - Portulaca oleracea","Oxalis pied-de-chèvre - Gossibi - Oxalis pes-caprae",
+"Digitaire sanguine - Danab el-far - Digitaria sanguinalis","Sétaire verte - Chaâra - Setaria viridis",
+"Amarante réfléchie - Chouka hamra - Amaranthus retroflexus","Laiteron maraîcher - Tyf - Sonchus oleraceus",
+"Mauve sauvage - Khebbiza - Malva sylvestris","Morelle noire - Inab ed-dib - Solanum nigrum",
+"Roquette blanche - Jrir - Diplotaxis erucoides","Fenouil bâtard - Bessbes el-khla - Ridolfia segetum",
+"Oseille crépue - Homaidh - Rumex crispus","Renouée des oiseaux - Bessat el-ardh - Polygonum aviculare"
+];
+
+// ── Tree EC thresholds for Tunisia (citrus/pomegranate/apple) ────────────────
+const TREE_EC_THRESHOLDS = {
+  citrus: {
+    name: 'Citrus / Cédrat', icon: '🍋',
+    emptyTank: 200, optimal_min: 400, optimal_max: 1200,
+    warningHigh: 1600, redZone: 2000, brineZone: 3000,
+    fertileMin: 400, fertileMax: 1400,
+    salinityPhases: {
+      DORMANCY: { max: 900, label: 'Dormance' },
+      FLOWERING: { max: 700, label: 'Floraison' },
+      FRUIT_SET: { max: 1000, label: 'Nouaison' },
+      SIZING: { max: 1100, label: 'Grossissement' },
+      RIPENING: { push: 1400, label: 'Maturation' }
+    },
+    tunisiaSeasons: { dec_feb: 'DORMANCY', mar_apr: 'FLOWERING', may_jun: 'FRUIT_SET', jul_sep: 'SIZING', oct_nov: 'RIPENING' }
+  },
+  apple: {
+    name: 'Pomme', icon: '🍎',
+    emptyTank: 200, optimal_min: 300, optimal_max: 1000,
+    warningHigh: 1500, redZone: 2000, brineZone: 3000,
+    fertileMin: 350, fertileMax: 1200,
+    salinityPhases: {
+      DORMANCY: { max: 700, label: 'Dormance' },
+      BUDBREAK: { max: 500, label: 'Débourrement' },
+      FLOWERING: { max: 500, label: 'Floraison' },
+      FRUIT_SET: { max: 800, label: 'Nouaison' },
+      SIZING: { max: 900, label: 'Grossissement' },
+      RIPENING: { push: 1200, label: 'Maturation' }
+    },
+    tunisiaSeasons: { dec_feb: 'DORMANCY', mar: 'BUDBREAK', apr: 'FLOWERING', may_jun: 'FRUIT_SET', jul_aug: 'SIZING', sep_nov: 'RIPENING' }
+  },
+  pomegranate: {
+    name: 'Grenadier', icon: '🍎',
+    emptyTank: 200, optimal_min: 500, optimal_max: 1500,
+    warningHigh: 2000, redZone: 3000, brineZone: 4000,
+    fertileMin: 500, fertileMax: 1800,
+    salinityPhases: {
+      DORMANCY: { max: 1000, label: 'Dormance' },
+      FLOWERING: { max: 900, label: 'Floraison' },
+      FRUIT_SET: { max: 1200, label: 'Nouaison' },
+      SIZING: { max: 1500, label: 'Grossissement' },
+      RIPENING: { push: 2000, label: 'Maturation — Push Brix' }
+    },
+    tunisiaSeasons: { dec_feb: 'DORMANCY', mar_apr: 'FLOWERING', may_jun: 'FRUIT_SET', jul_aug: 'SIZING', sep_nov: 'RIPENING' }
+  }
+};
+
+function getTunisiaPhase(treeId) {
+  const m = new Date().getMonth() + 1; // 1-12
+  if (treeId === 'citrus') {
+    if ([12,1,2].includes(m)) return 'DORMANCY';
+    if ([3,4].includes(m)) return 'FLOWERING';
+    if ([5,6].includes(m)) return 'FRUIT_SET';
+    if ([7,8,9].includes(m)) return 'SIZING';
+    return 'RIPENING';
+  }
+  if (treeId === 'apple') {
+    if ([12,1,2].includes(m)) return 'DORMANCY';
+    if (m===3) return 'BUDBREAK';
+    if (m===4) return 'FLOWERING';
+    if ([5,6].includes(m)) return 'FRUIT_SET';
+    if ([7,8].includes(m)) return 'SIZING';
+    return 'RIPENING';
+  }
+  if (treeId === 'pomegranate') {
+    if ([12,1,2].includes(m)) return 'DORMANCY';
+    if ([3,4].includes(m)) return 'FLOWERING';
+    if ([5,6].includes(m)) return 'FRUIT_SET';
+    if ([7,8].includes(m)) return 'SIZING';
+    return 'RIPENING';
+  }
+  return 'SIZING';
+}
+
+function getTunisiaSeason() {
+  const m = new Date().getMonth() + 1;
+  if ([12,1,2].includes(m)) return 'Hiver';
+  if ([3,4,5].includes(m)) return 'Printemps';
+  if ([6,7,8].includes(m)) return 'Été';
+  return 'Automne';
+}
+
+// ── Full EC DSS Engine ─────────────────────────────────────────────────────
+function runEcDSS({ ec, fertility, moisture, ph, soilTemp, envHumidity, treeId, otherReadings }) {
+  const tree = TREE_EC_THRESHOLDS[treeId] || TREE_EC_THRESHOLDS.citrus;
+  const phase = getTunisiaPhase(treeId);
+  const phaseData = tree.salinityPhases[phase] || {};
+  const season = getTunisiaSeason();
+  const alerts = [];
+  let statusColor = '#22c55e';
+  let statusLabel = '';
+
+  // ── 1. Empty Tank Signal ─────────────────────────────────────────
+  if (ec < tree.emptyTank) {
+    alerts.push({
+      title: '💧 Empty Tank — Sol Quasi-Distillé',
+      msg: `EC ${ec} µS/cm < ${tree.emptyTank} µS/cm. Aucun tampon nutritif. La croissance puise dans les réserves internes de l'arbre. Apport immédiat recommandé.`,
+      level: 'critical'
+    });
+    statusColor = '#ef4444'; statusLabel = '🔴 Carence Totale — Zéro Tampon';
+  }
+
+  // ── 2. Binary Salinity Red Zone ──────────────────────────────────
+  if (ec >= tree.redZone) {
+    alerts.push({
+      title: '🚨 RED ZONE — Arrêt Irrigation / Lixiviation Urgente',
+      msg: `EC ${ec} µS/cm ≥ ${tree.redZone} µS/cm (zone rouge ${tree.name}). STOP irrigation immédiat. Lancer un cycle de lixiviation (fraction lixiviat ≥ 25%). Risque toxicité racinaire sévère.`,
+      level: 'critical'
+    });
+    statusColor = '#dc2626'; statusLabel = '🚨 ZONE ROUGE — Toxicité Saline';
+  } else if (ec >= tree.warningHigh) {
+    alerts.push({
+      title: '⚠️ Pré-Alerte Salinité — Vigilance',
+      msg: `EC ${ec} µS/cm approche la zone rouge (${tree.redZone} µS/cm). Surveiller de près. Envisager une irrigation de dilution.`,
+      level: 'warning'
+    });
+    if (!statusLabel) { statusColor = '#f59e0b'; statusLabel = '🟡 Salinité Élevée — Vigilance'; }
+  }
+
+  // ── 3. Salt Accumulation Early Warning ───────────────────────────
+  if (ec > tree.optimal_max && ec < tree.warningHigh) {
+    alerts.push({
+      title: '🧂 Early Warning Accumulation Sel',
+      msg: `EC ${ec} µS/cm dépasse l'optimal (${tree.optimal_max} µS/cm). Sel en accumulation progressive dans les premiers centimètres. Inspecter les bordures de goutteurs. Croûtes blanches possibles sous 2-3 semaines.`,
+      level: 'warning'
+    });
+    if (!statusLabel) { statusColor = '#f59e0b'; statusLabel = '🟡 Accumulation Sel Détectée'; }
+  }
+
+  // ── 4. Manure Maturity Audit ──────────────────────────────────────
+  if (ec > 3000) {
+    alerts.push({
+      title: '🌡️ Compost "Chaud" — Brûlure Racinaire',
+      msg: `EC > 3000 µS/cm après application de matière organique = compost instable (immature). Les sels libérés brûleront les racines. Arrêter les apports et lixivier.`,
+      level: 'critical'
+    });
+  }
+
+  // ── 5. Optimal range ─────────────────────────────────────────────
+  if (ec >= tree.optimal_min && ec <= tree.optimal_max) {
+    alerts.push({
+      title: '✅ EC Optimal pour ' + tree.name,
+      msg: `EC ${ec} µS/cm dans la plage optimale (${tree.optimal_min}–${tree.optimal_max} µS/cm). Tampon nutritif adéquat. Phase: ${phaseData.label || phase}. Saison: ${season}.`,
+      level: 'good'
+    });
+    if (!statusLabel) { statusColor = '#22c55e'; statusLabel = '🟢 Optimal — ' + phaseData.label; }
+  }
+
+  // ── 6. Fertility probe comparison ────────────────────────────────
+  if (fertility !== null && fertility !== undefined && !isNaN(fertility)) {
+    const diff = Math.abs(fertility - ec);
+    const fertilityStatus = fertility >= tree.fertileMin && fertility <= tree.fertileMax ? 'Fertile' : fertility < tree.fertileMin ? 'Déficitaire' : 'Excès';
+    alerts.push({
+      title: `🔬 Sonde Fertilité: ${fertility} µS/cm (±100)`,
+      msg: `Fertilité sol: ${fertilityStatus}. ${diff > 200 ? `⚠️ Écart EC/Fertilité = ${diff} µS/cm — gradient salin spatial important.` : `Cohérence EC/Fertilité correcte (écart: ${diff} µS/cm).`}`,
+      level: diff > 200 ? 'warning' : 'info'
+    });
+  }
+
+  // ── 7. Salinity Push for Ripening (Brix enhancement) ─────────────
+  if (phase === 'RIPENING' && phaseData.push) {
+    if (ec >= phaseData.push * 0.85 && ec <= phaseData.push * 1.15) {
+      alerts.push({
+        title: '🍬 Salinity Push Actif — Boost Brix',
+        msg: `EC ${ec} µS/cm dans la fenêtre de stress osmotique optimal (${phaseData.push} µS/cm cible). Mécanisme de concentration des sucres activé. Maintenir 5-7 jours.`,
+        level: 'info'
+      });
+    } else if (ec < phaseData.push * 0.7) {
+      alerts.push({
+        title: '💡 Salinity Push Disponible',
+        msg: `Phase ${phaseData.label}: vous pouvez monter EC jusqu'à ${phaseData.push} µS/cm pour forcer l'accumulation de sucres (Brix). Actuellement: ${ec} µS/cm.`,
+        level: 'info'
+      });
+    }
+  }
+
+  // ── 8. pH effects on availability ────────────────────────────────
+  if (ph !== null && ph !== undefined && !isNaN(ph)) {
+    const phLow = ph - 0.5, phHigh = ph + 0.5;
+    let phMsg = '';
+    if (phHigh < 5.5) {
+      phMsg = `pH ${ph} (±0.5): Sol acide. Fe, Mn, Al potentiellement toxiques. P, Ca, Mg bloqués. Amendement calcaire recommandé.`;
+      alerts.push({ title: `🧪 pH ${ph} — Acidité: Nutriments Bloqués`, msg: phMsg, level: 'critical' });
+    } else if (phHigh > 8.0) {
+      phMsg = `pH ${ph} (±0.5): Sol alcalin. Fe, Zn, Mn bloqués (chlorose possible). P précipite en Ca-phosphate. EC réelle sous-estimée. Chélates recommandés.`;
+      alerts.push({ title: `🧪 pH ${ph} — Alcalinité: Chlorose Probable`, msg: phMsg, level: 'warning' });
+    } else if (ph >= 6.2 && ph <= 7.2) {
+      alerts.push({ title: `✅ pH ${ph} — Fenêtre NPK Optimale`, msg: `pH dans la zone idéale pour disponibilité NPK maximale. Microflore du sol active.`, level: 'good' });
+    }
+
+    // Herbicide/Pesticide window
+    if (phHigh > 8.5 || phLow < 5.0) {
+      alerts.push({
+        title: '🚫 pH hors fenêtre Herbicide/Pesticide',
+        msg: `pH ${ph} (±0.5) en dehors de la fenêtre d'efficacité (5.5-8.0). Les produits appliqués au sol peuvent devenir inactifs ou toxiques.`,
+        level: 'warning'
+      });
+    }
+  }
+
+  // ── 9. Soil Temperature effects ──────────────────────────────────
+  if (soilTemp !== null && soilTemp !== undefined && !isNaN(soilTemp)) {
+    if (soilTemp >= 20 && soilTemp <= 30) {
+      alerts.push({
+        title: `🌡️ Temp Sol ${soilTemp}°C (±1) — Bio-engine Actif`,
+        msg: `Fenêtre optimale (20-30°C) pour la nitrification et l'activité microbienne. Minéralisation MO maximale.`,
+        level: 'good'
+      });
+      // Nitrification rate
+      const nitrRate = soilTemp >= 25 ? 'rapide (>60% N-NO3 en 7j)' : 'modérée (40-60% N-NO3 en 10j)';
+      alerts.push({
+        title: `⚗️ Nitrification: ${nitrRate}`,
+        msg: `À ${soilTemp}°C: conversion N-organique → N-NO3 ${nitrRate}. Ajuster les apports azotés en conséquence.`,
+        level: 'info'
+      });
+    } else if (soilTemp < 10) {
+      alerts.push({
+        title: `🥶 Temp Sol ${soilTemp}°C (±1) — Bio-engine Bloqué`,
+        msg: `Nitrification quasi nulle sous 10°C. Absorption racinaire réduite. Ne pas fertiliser — pertes par lessivage garanties.`,
+        level: 'warning'
+      });
+    } else if (soilTemp > 35) {
+      alerts.push({
+        title: `🔥 Temp Sol ${soilTemp}°C (±1) — Stress Thermique`,
+        msg: `Au-delà de 35°C, les racines souffrent et l'absorption diminue. Irrigation fraîche en mulching recommandée.`,
+        level: 'critical'
+      });
+    }
+    // VPD proxy
+    if (moisture !== null && moisture !== undefined && !isNaN(moisture)) {
+      const vpdProxy = ((1 - moisture/100) * (soilTemp / 20)).toFixed(2);
+      const stomatalStatus = vpdProxy > 0.8 ? 'Stress hydrique probable — stomates fermés' : vpdProxy > 0.5 ? 'Tension modérée — conductance réduite' : 'Tension faible — stomates ouverts';
+      alerts.push({
+        title: `💨 VPD Proxy: ${vpdProxy} — ${stomatalStatus.split('—')[0].trim()}`,
+        msg: `Combinaison Temp(${soilTemp}°C)+Humidité(${moisture}%): ${stomatalStatus}. Indice proxy de tension eau interne de l'arbre.`,
+        level: vpdProxy > 0.8 ? 'warning' : 'info'
+      });
+    }
+  }
+
+  // ── 10. Moisture effects ─────────────────────────────────────────
+  if (moisture !== null && moisture !== undefined && !isNaN(moisture)) {
+    if (moisture < 20) {
+      alerts.push({
+        title: `💧 Humidité ${moisture}% — Stress Osmotique`,
+        msg: `Sol sec. Absorption racinaire compromise. L'EC réelle est sous-estimée (concentration des sels). Irriguer avant fertilisation.`,
+        level: 'warning'
+      });
+    } else if (moisture > 80) {
+      alerts.push({
+        title: `🌊 Humidité ${moisture}% — Fraction Lixiviat`,
+        msg: `Sol saturé. Fraction lixiviat excessive. Risque de lessivage des nitrates. Vérifier le drainage. EC peut baisser rapidement.`,
+        level: 'warning'
+      });
+    } else {
+      // Harvest window
+      const holdPush = moisture > 60 ? 'HOLD (métabolisme ralenti, maintien fruit sur arbre)' : 'PUSH (stress doux, accélération maturité)';
+      alerts.push({
+        title: `🍑 Fenêtre Récolte: ${holdPush.split('(')[0].trim()}`,
+        msg: `Humidité ${moisture}%: stratégie ${holdPush}. ${moisture > 60 ? 'Réduire irrigation pour avancer la récolte.' : 'Maintenir irrigation pour retarder la récolte.'}`,
+        level: 'info'
+      });
+    }
+  }
+
+  // ── 11. Irrigation Uniformity Check ─────────────────────────────
+  if (otherReadings) {
+    const vals = otherReadings.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+    if (vals.length >= 3) {
+      const allVals = [ec, ...vals];
+      const minV = Math.min(...allVals), maxV = Math.max(...allVals);
+      const variance = maxV - minV;
+      const avg = (allVals.reduce((a,b)=>a+b,0)/allVals.length).toFixed(0);
+      if (variance > 400) {
+        const outliers = allVals.filter(v => Math.abs(v - parseFloat(avg)) > 300);
+        alerts.push({
+          title: `⚠️ Uniformité Irrigation: Variance ${variance} µS/cm`,
+          msg: `Variance > 400 µS/cm entre ${allVals.length} arbres (min: ${minV}, max: ${maxV}, moy: ${avg}). Système d'irrigation délivrant des charges nutritives inégales. Vérifier filtres, pression, colmatage goutteurs. ${outliers.length > 0 ? `Valeurs hors-norme: ${outliers.join(', ')} µS/cm.` : ''}`,
+          level: 'critical'
+        });
+      } else {
+        alerts.push({
+          title: `✅ Uniformité Irrigation: OK (var. ${variance} µS/cm)`,
+          msg: `Variance acceptable entre ${allVals.length} arbres. Distribution nutritive uniforme.`,
+          level: 'good'
+        });
+      }
+    }
+  }
+
+  // ── 12. Solubility threshold ─────────────────────────────────────
+  if (ec > 4000) {
+    alerts.push({
+      title: '⚗️ Seuil Saturation Dépassé',
+      msg: `EC > 4000 µS/cm: point de saturation probable. Les fertilisants additionnels ne se dissolvent plus — précipitation en sels solides. Augmenter le volume d'eau avant tout apport.`,
+      level: 'excess'
+    });
+  }
+
+  // ── 13. Env humidity + stomatal ──────────────────────────────────
+  if (envHumidity !== null && envHumidity !== undefined && !isNaN(envHumidity)) {
+    if (envHumidity < 30) {
+      alerts.push({
+        title: `🌬️ Humidité Amb. ${envHumidity}% — VPD Élevé`,
+        msg: `Humidité ambiante très basse. Demande évaporative élevée. L'arbre peut fermer ses stomates même avec un sol humide. Augmenter la fréquence d'irrigation.`,
+        level: 'warning'
+      });
+    }
+  }
+
+  if (!statusLabel) {
+    if (ec < tree.optimal_min) { statusColor = '#f59e0b'; statusLabel = `🟡 En-dessous Optimal (< ${tree.optimal_min} µS/cm)`; }
+    else { statusColor = '#22c55e'; statusLabel = '🟢 Bon'; }
+  }
+
+  return {
+    ec, fertility, moisture, ph, soilTemp, envHumidity,
+    treeId, treeLabel: tree.name, treeIcon: tree.icon,
+    phase: phaseData.label || phase, season,
+    statusColor, statusLabel, alerts,
+    alertCount: alerts.length,
+    criticalCount: alerts.filter(a=>a.level==='critical').length
+  };
+}
+
+// ── Nitrogen DSS ──────────────────────────────────────────────────────────
+function quickNitrogenAnalysis(d4, d8, d12, expectedRain = 0) {
+  const weighted = d4 * 0.20 + d8 * 0.40 + d12 * 0.40;
+  let color, label, action, ammonitrate = 0;
+  if (weighted < 10)       { color='#ef4444'; label='🔴 Carence Critique'; action='Apport urgent requis.'; ammonitrate = 200; }
+  else if (weighted < 18)  { color='#f59e0b'; label='🟡 Niveau Faible'; action='Apport de correction recommandé.'; ammonitrate = 120; }
+  else if (weighted < 32)  { color='#22c55e'; label='🟢 Niveau Optimal'; action='Disponibilité adéquate.'; ammonitrate = 0; }
+  else if (weighted < 50)  { color='#3b82f6'; label='🔵 Niveau Élevé'; action='Stock abondant. Surveiller.'; ammonitrate = 0; }
+  else                     { color='#8b5cf6'; label='🟣 Excès'; action='Risque de toxicité.'; ammonitrate = 0; }
+  if (ammonitrate > 0 && expectedRain > 25) { ammonitrate = 0; action += ' ⚠️ REPORT: pluie prévue.'; }
+  return { color, label, action, ammonitrate, interpretation: `Stock pondéré: ${weighted.toFixed(1)} mg/kg`, d4, d8, d12 };
+}
+
+// ── PDF Export ────────────────────────────────────────────────────────────
+function generatePDFReport(note) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, M = 15;
+  let y = M;
+
+  const addText = (text, x, size=10, style='normal', color=[30,30,30]) => {
+    doc.setFontSize(size); doc.setFont('helvetica', style); doc.setTextColor(...color);
+    const lines = doc.splitTextToSize(text, W - x - M);
+    doc.text(lines, x, y);
+    y += lines.length * (size * 0.4) + 2;
+    return lines.length;
+  };
+  const addLine = (color=[220,220,220]) => {
+    doc.setDrawColor(...color); doc.line(M, y, W-M, y); y += 3;
+  };
+  const checkPage = (needed=20) => {
+    if (y > 280 - needed) { doc.addPage(); y = M; }
+  };
+
+  // Header
+  doc.setFillColor(15,17,23); doc.rect(0,0,W,30,'F');
+  doc.setFontSize(16); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+  doc.text('BC FARM', M, 12);
+  doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(160,160,160);
+  doc.text('Ben Chiboub Software — Compte Rendu Agronomique', M, 19);
+  doc.setFontSize(8); doc.setTextColor(120,120,120);
+  doc.text(new Date().toLocaleDateString('fr-FR', {weekday:'long',year:'numeric',month:'long',day:'numeric'}), M, 26);
+  y = 38;
+
+  // Title
+  doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.setTextColor(30,30,30);
+  doc.text(note.title || 'Note sans titre', M, y); y += 8;
+  addLine();
+
+  // Summary stats
+  const ecBlocks = note.blocks?.filter(b => b.type === 'ec') || [];
+  const nBlocks = note.blocks?.filter(b => b.type === 'nitrogen') || [];
+  const textBlocks = note.blocks?.filter(b => b.type === 'text') || [];
+  const totalBlocks = note.blocks?.length || 0;
+
+  doc.setFillColor(245,247,250); doc.rect(M, y, W-2*M, 18, 'F');
+  doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(80,80,80);
+  doc.text(`Lectures EC: ${ecBlocks.length}`, M+4, y+6);
+  doc.text(`Lectures N: ${nBlocks.length}`, M+50, y+6);
+  doc.text(`Notes terrain: ${textBlocks.length}`, M+90, y+6);
+  doc.text(`Total entrées: ${totalBlocks}`, M+140, y+6);
+  y += 22;
+
+  // EC Readings
+  if (ecBlocks.length > 0) {
+    checkPage(20);
+    addText('⚡ LECTURES EC — CONDUCTIVITÉ ÉLECTRIQUE', M, 12, 'bold', [39,174,96]);
+    addLine([200,240,210]);
+
+    ecBlocks.forEach((b, i) => {
+      checkPage(40);
+      const d = b.ecData;
+      doc.setFillColor(250,255,252); doc.rect(M, y-2, W-2*M, 12, 'F');
+      doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(30,30,30);
+      doc.text(`${i+1}. ${d.treeLabel} — EC: ${d.ec} µS/cm`, M+2, y+4);
+      doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+      doc.text(`Phase: ${d.phase} | Saison: ${d.season} | ${new Date(b.timestamp).toLocaleDateString('fr-FR')}`, M+2, y+9);
+      y += 16;
+
+      if (d.fertility) { addText(`  Fertilité probe: ${d.fertility} µS/cm (±100)`, M+2, 9, 'normal', [60,100,60]); }
+      if (d.ph) { addText(`  pH: ${d.ph} (±0.5)`, M+2, 9, 'normal', [60,80,120]); }
+      if (d.soilTemp) { addText(`  Temp. sol: ${d.soilTemp}°C (±1)`, M+2, 9, 'normal', [120,60,40]); }
+      if (d.moisture) { addText(`  Humidité sol: ${d.moisture}%`, M+2, 9, 'normal', [40,80,120]); }
+
+      d.alerts.forEach(alert => {
+        checkPage(15);
+        const lvlColor = alert.level==='critical'?[200,50,50]:alert.level==='warning'?[180,130,0]:alert.level==='good'?[50,150,80]:[60,100,180];
+        addText(`  ▸ ${alert.title}`, M+4, 9, 'bold', lvlColor);
+        addText(`    ${alert.msg}`, M+6, 8, 'normal', [80,80,80]);
+      });
+
+      if (b.location) { addText(`  📍 ${b.location.lat.toFixed(5)}, ${b.location.lon?.toFixed(5)}`, M+2, 8, 'normal', [120,120,120]); }
+      y += 4;
+    });
+    y += 4;
+  }
+
+  // Nitrogen Readings
+  if (nBlocks.length > 0) {
+    checkPage(20);
+    addText('🌱 LECTURES AZOTE (N)', M, 12, 'bold', [59,130,246]);
+    addLine([200,210,240]);
+
+    nBlocks.forEach((b, i) => {
+      checkPage(30);
+      const d = b.nitrogenData;
+      doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(30,30,30);
+      doc.text(`${i+1}. N: ${d.d4} / ${d.d8} / ${d.d12} mg/kg (4/8/12cm) — ${d.label}`, M+2, y+3);
+      y += 8;
+      addText(`     Action: ${d.action}`, M+4, 9, 'normal', [80,80,80]);
+      if (d.ammonitrate > 0) { addText(`     Ammonitrate 33.5%: ${d.ammonitrate} kg/ha`, M+4, 9, 'bold', [59,130,246]); }
+      if (b.location) { addText(`     📍 ${b.location.lat.toFixed(5)}, ${b.location.lon?.toFixed(5)}`, M+4, 8, 'normal', [140,140,140]); }
+      y += 3;
+    });
+    y += 4;
+  }
+
+  // Field Notes
+  if (textBlocks.length > 0) {
+    checkPage(20);
+    addText('📝 NOTES TERRAIN', M, 12, 'bold', [80,80,80]);
+    addLine();
+    textBlocks.forEach((b, i) => {
+      checkPage(20);
+      const plain = (b.text||'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/#{1,6}\s/g,'').substring(0,300);
+      addText(`${i+1}. ${plain}`, M+2, 9, 'normal', [60,60,60]);
+      addText(`   ${new Date(b.timestamp).toLocaleDateString('fr-FR')} ${formatTimeSimple(b.timestamp)}`, M+2, 8, 'normal', [150,150,150]);
+      y += 2;
+    });
+  }
+
+  // Footer
+  checkPage(15);
+  addLine();
+  doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(150,150,150);
+  doc.text('BC FARM — Ben Chiboub Software | Généré le ' + new Date().toLocaleString('fr-FR'), M, y);
+  doc.text('Rapport à usage agronomique — Tunisia Tree Agronomy DSS', M, y+4);
+
+  return doc;
+}
+
+function formatTimeSimple(ts) {
+  return new Date(ts).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+}
+
+// ── Vue App ───────────────────────────────────────────────────────────────
+createApp({
+setup() {
+  const folders = ref([{ id: '1', name: 'Field Notes', expanded: true, color: '#22c55e' }]);
+  const notes = ref([]);
+  const activeNoteId = ref(null);
+  const sidebarOpen = ref(window.innerWidth > 768);
+  const isDark = ref(true);
+  const newMessage = ref('');
+  const viewMode = ref('normal');
+  const searchQuery = ref('');
+  const feedSearch = ref('');
+  const feedFilter = ref('all');
+  const editingFolderId = ref(null);
+  const isRecording = ref(false);
+  const toast = ref({ show: false, message: '', icon: '' });
+  const farmTab = ref('feed');
+  const feedEl = ref(null);
+  const messageInput = ref(null);
+  const cameraInput = ref(null);
+  const galleryInput = ref(null);
+  const pickerColumn = ref(null);
+  const mapNoteCameraInput = ref(null);
+  const folderNameInput = ref(null);
+  const titleInput = ref(null);
+
+  // GPS
+  const userLat = ref(null); const userLng = ref(null); const gpsStatus = ref('loading');
+  // Weather
+  const weatherData = ref(null);
+  // Nitrogen picker
+  const showNitrogenPicker = ref(false);
+  const currentDepthStep = ref(0);
+  const nitrogenReadings = ref({ d4: 30, d8: 25, d12: 18 });
+  const currentPickerValue = ref(30);
+  const isAddingReading = ref(false);
+  // EC form
+  const ecForm = ref({ treeType: 'citrus', ec: null, fertility: null, moisture: null, ph: null, soilTemp: null, envHumidity: null, otherReadings: '' });
+  // Reading settings
+  const readingSettings = ref({ bbch: 'TILLERING', variety: 'om5', objective: 'MEDIUM', previousCrop: 'CEREAL', soilType: 'CLAY_LOAM', ph: 8.2, humidity: 0.45, irrigated: false, expectedRain: 0 });
+  // Map
+  let mapInstance = null, mapMarkers = [];
+  const mapNoteMode = ref(false);
+  const showMapNoteModal = ref(false);
+  const mapNoteForm = ref({ lat: null, lng: null, text: '', weeds: [], image: null });
+  // Weed
+  const weedSearch = ref('');
+  // Modal
+  const modal = ref({ show: false, type: '', title: '', message: '', folderName: '', selectedColor: '#22c55e', targetId: null, action: null, selectedWeeds: [], noteData: null });
+  const folderColors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+  let holdTimer = null;
+  // Autosave
+  const autosaveEnabled = ref(false); const autosaveNoteId = ref('');
+
+  // Tree types
+  const treeTypes = [
+    { id: 'citrus', name: 'Citrus', icon: '🍋' },
+    { id: 'apple', name: 'Pomme', icon: '🍎' },
+    { id: 'pomegranate', name: 'Grenade', icon: '🫐' }
+  ];
+
+  // ── Computed ──────────────────────────────────────────────────────
+  const activeNote = computed(() => notes.value.find(n => n.id === activeNoteId.value));
+  const trashedNotes = computed(() => notes.value.filter(n => n.isDeleted));
+  const filteredWeedList = computed(() => {
+    if (!weedSearch.value) return TUNISIAN_WEEDS;
+    const q = weedSearch.value.toLowerCase();
+    return TUNISIAN_WEEDS.filter(w => w.toLowerCase().includes(q));
+  });
+  const pickerDepthLabel = computed(() => ['4cm','8cm','12cm'][currentDepthStep.value]);
+
+  const filteredBlocks = computed(() => {
+    if (!activeNote.value) return [];
+    let blocks = activeNote.value.blocks || [];
+    if (feedFilter.value !== 'all') blocks = blocks.filter(b => b.type === feedFilter.value);
+    if (feedSearch.value.trim()) {
+      const q = feedSearch.value.toLowerCase();
+      blocks = blocks.filter(b => {
+        if (b.text?.toLowerCase().includes(q)) return true;
+        if (b.ecData?.statusLabel?.toLowerCase().includes(q)) return true;
+        if (b.nitrogenData?.label?.toLowerCase().includes(q)) return true;
+        if (JSON.stringify(b).toLowerCase().includes(q)) return true;
+        return false;
+      });
+    }
+    return blocks;
+  });
+
+  // ── Persistence ───────────────────────────────────────────────────
+  const saveData = () => {
+    try {
+      localStorage.setItem('bcf_f', JSON.stringify(folders.value));
+      localStorage.setItem('bcf_n', JSON.stringify(notes.value));
+      localStorage.setItem('bcf_rs', JSON.stringify(readingSettings.value));
+      localStorage.setItem('bcf_as', JSON.stringify({ enabled: autosaveEnabled.value, noteId: autosaveNoteId.value }));
+      localStorage.setItem('bcf_theme', isDark.value ? 'dark' : 'light');
+    } catch(e) {}
+  };
+  const loadData = () => {
+    try {
+      const f=localStorage.getItem('bcf_f'), n=localStorage.getItem('bcf_n'),
+            rs=localStorage.getItem('bcf_rs'), as=localStorage.getItem('bcf_as'),
+            th=localStorage.getItem('bcf_theme');
+      if (f) folders.value = JSON.parse(f);
+      if (n) notes.value = JSON.parse(n);
+      if (rs) readingSettings.value = JSON.parse(rs);
+      if (as) { const d=JSON.parse(as); autosaveEnabled.value=d.enabled; autosaveNoteId.value=d.noteId; }
+      if (th) isDark.value = th === 'dark';
+    } catch(e) {}
+  };
+  watch([folders, notes, readingSettings, autosaveEnabled, autosaveNoteId], saveData, { deep: true });
+  watch(isDark, saveData);
+
+  // ── Theme ─────────────────────────────────────────────────────────
+  const toggleTheme = () => { isDark.value = !isDark.value; };
+  watch(isDark, (val) => {
+    const body = document.body;
+    if (val) {
+      document.documentElement.classList.add('dark');
+      body.style.background = '#09090b';
+      body.style.color = '#f4f4f5';
+    } else {
+      document.documentElement.classList.remove('dark');
+      body.style.background = '#f8fafc';
+      body.style.color = '#0f172a';
+    }
+  }, { immediate: true });
+
+  // ── GPS ───────────────────────────────────────────────────────────
+  const getGPS = () => {
+    gpsStatus.value = 'loading';
+    if (!navigator.geolocation) { gpsStatus.value='error'; return; }
+    navigator.geolocation.getCurrentPosition(pos => {
+      userLat.value=pos.coords.latitude; userLng.value=pos.coords.longitude; gpsStatus.value='ok';
+      fetchWeather(pos.coords.latitude, pos.coords.longitude);
+    }, () => {
+      gpsStatus.value='error'; userLat.value=37.028; userLng.value=9.5;
+      fetchWeather(37.028, 9.5);
+    }, { enableHighAccuracy:true, timeout:15000 });
+  };
+  const getCurrentPosition = () => new Promise((resolve, reject) => {
+    if (userLat.value && userLng.value) { resolve({ lat: userLat.value, lon: userLng.value }); return; }
+    navigator.geolocation.getCurrentPosition(p => resolve({ lat:p.coords.latitude, lon:p.coords.longitude }), reject, { enableHighAccuracy:true, timeout:20000 });
+  });
+
+  // ── Weather ───────────────────────────────────────────────────────
+  const fetchWeather = async (lat, lng) => {
+    try {
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m&daily=precipitation_sum&timezone=auto&forecast_days=7`);
+      const d = await res.json();
+      weatherData.value = { temperature:d.current.temperature_2m, humidity:d.current.relative_humidity_2m, rain7days:d.daily.precipitation_sum.slice(0,7) };
+    } catch(e) {}
+  };
+  const fillRainFromWeather = () => {
+    if (weatherData.value) readingSettings.value.expectedRain = weatherData.value.rain7days?.reduce((a,b)=>a+b,0) || 0;
+  };
+
+  // ── EC Reading ─────────────────────────────────────────────────────
+  const openEcModal = () => {
+    ecForm.value = { treeType: 'citrus', ec: null, fertility: null, moisture: null, ph: null, soilTemp: null, envHumidity: null, otherReadings: '' };
+    modal.value = { show:true, type:'ecReading', title:'⚡ EC Reading — Analyse Sol', selectedWeeds:[] };
+  };
+  const saveEcReading = async () => {
+    if (!ecForm.value.ec) return;
+    const ecData = runEcDSS({
+      ec: ecForm.value.ec,
+      fertility: ecForm.value.fertility,
+      moisture: ecForm.value.moisture,
+      ph: ecForm.value.ph,
+      soilTemp: ecForm.value.soilTemp,
+      envHumidity: ecForm.value.envHumidity,
+      treeId: ecForm.value.treeType,
+      otherReadings: ecForm.value.otherReadings
+    });
+    let pos = { lat: userLat.value || 37.028, lon: userLng.value || 9.5 };
+    try { pos = await getCurrentPosition(); } catch(e) {}
+    const block = { id: Date.now(), type:'ec', ecData, location:pos, timestamp:Date.now() };
+    if (!activeNote.value.farmReadings) activeNote.value.farmReadings = [];
+    activeNote.value.blocks.push(block);
+    activeNote.value.farmReadings.push({ type:'ec', ecData, location:pos, timestamp:Date.now() });
+    closeModal();
+    showToast(`EC ${ecForm.value.ec} µS/cm analysé`, '⚡');
+    nextTick(() => { scrollToBottom(); if(mapInstance) refreshMapMarkers(); });
+  };
+
+  const openEcDetails = (block) => {
+    modal.value = { show:true, type:'noteDetail', title:`⚡ EC Detail — ${block.ecData?.treeLabel}`, noteData: block };
+  };
+
+  // ── PDF Export ────────────────────────────────────────────────────
+  const exportToPDF = () => {
+    if (!activeNote.value) return;
+    try {
+      const doc = generatePDFReport(activeNote.value);
+      const fname = `BC_FARM_${(activeNote.value.title||'rapport').replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`;
+      doc.save(fname);
+      showToast('PDF exporté', '📄');
+    } catch(e) { console.error(e); showToast('Erreur PDF', '❌'); }
+  };
+
+  // ── Map ───────────────────────────────────────────────────────────
+  const initMap = () => {
+    nextTick(() => {
+      const el = document.getElementById('farm-map'); if (!el) return;
+      if (mapInstance) { if (mapInstance.getContainer()===el) { refreshMapMarkers(); mapInstance.resize(); return; } mapInstance.remove(); mapInstance=null; }
+      mapInstance = new maplibregl.Map({ container:'farm-map', style:`https://api.maptiler.com/maps/satellite/style.json?key=${MAPTILER_KEY}`, center:[userLng.value||9.5, userLat.value||37.028], zoom:15, attributionControl:false });
+      mapInstance.addControl(new maplibregl.NavigationControl(), 'top-right');
+      mapInstance.on('load', () => {
+        refreshMapMarkers();
+        if (userLat.value) {
+          const el2=document.createElement('div'); el2.style.cssText='width:14px;height:14px;border-radius:50%;background:#3b82f6;border:2.5px solid white;box-shadow:0 0 0 4px rgba(59,130,246,.25)';
+          new maplibregl.Marker({element:el2}).setLngLat([userLng.value,userLat.value]).addTo(mapInstance);
+        }
+      });
+      mapInstance.on('click', (e) => {
+        if (mapNoteMode.value) { mapNoteForm.value={lat:e.lngLat.lat,lng:e.lngLat.lng,text:'',weeds:[],image:null}; showMapNoteModal.value=true; mapNoteMode.value=false; }
+      });
+    });
+  };
+  const refreshMapMarkers = () => {
+    if (!mapInstance||!activeNote.value) return;
+    mapMarkers.forEach(m=>m.remove()); mapMarkers=[];
+    (activeNote.value.farmReadings||[]).forEach(r => {
+      const isEC = r.type === 'ec';
+      const el=document.createElement('div');
+      const color = isEC ? (r.ecData?.statusColor||'#22c55e') : r.nitrogenData?.color||'#3b82f6';
+      el.style.cssText=`width:28px;height:28px;border-radius:50%;background:${color};border:2.5px solid rgba(255,255,255,.9);box-shadow:0 2px 12px rgba(0,0,0,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;font-family:'IBM Plex Mono',monospace`;
+      el.textContent = isEC ? 'EC' : 'N';
+      const marker = new maplibregl.Marker({element:el}).setLngLat([r.location.lon,r.location.lat]).addTo(mapInstance);
+      mapMarkers.push(marker);
+    });
+    (activeNote.value.blocks||[]).filter(b=>b.type==='mapnote').forEach(b => {
+      const el=document.createElement('div'); el.style.cssText='width:22px;height:22px;background:#f59e0b;border-radius:50%;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer';
+      el.textContent='📍';
+      const marker = new maplibregl.Marker({element:el}).setLngLat([b.location.lon,b.location.lat]).addTo(mapInstance);
+      mapMarkers.push(marker);
+    });
+  };
+  const enableMapNoteMode = () => { mapNoteMode.value=true; showToast('Tap map to place note','📍'); };
+  const saveMapNote = async () => {
+    const block = { id:Date.now(), type:'mapnote', location:{lat:mapNoteForm.value.lat,lon:mapNoteForm.value.lng}, text:mapNoteForm.value.text, weeds:[...(mapNoteForm.value.weeds||[])], image:mapNoteForm.value.image, timestamp:Date.now() };
+    activeNote.value.blocks.push(block);
+    showMapNoteModal.value=false; showToast('Field note saved','📍');
+    nextTick(()=>refreshMapMarkers());
+  };
+  const triggerMapNoteCamera = () => mapNoteCameraInput.value?.click();
+  const handleMapNoteImage = (e) => { const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>{mapNoteForm.value.image=ev.target.result;}; r.readAsDataURL(f); };
+
+  // ── Nitrogen reading flow ─────────────────────────────────────────
+  const startNitrogenReading = () => {
+    currentDepthStep.value=0; const last=activeNote.value?.farmReadings?.filter(r=>r.nitrogenData).slice(-1)[0]?.nitrogenData;
+    nitrogenReadings.value={d4:last?.d4||30,d8:last?.d8||25,d12:last?.d12||18};
+    currentPickerValue.value=nitrogenReadings.value.d4; showNitrogenPicker.value=true;
+    nextTick(()=>{ if(pickerColumn.value) pickerColumn.value.scrollTop=currentPickerValue.value*50; });
+  };
+  const updatePickerValue = () => { if(!pickerColumn.value) return; const idx=Math.round(pickerColumn.value.scrollTop/50); currentPickerValue.value=Math.max(0,Math.min(150,idx)); };
+  const confirmPickerValue = () => {
+    const depths=['d4','d8','d12']; nitrogenReadings.value[depths[currentDepthStep.value]]=currentPickerValue.value;
+    if (currentDepthStep.value<2) { currentDepthStep.value++; currentPickerValue.value=nitrogenReadings.value[depths[currentDepthStep.value]]; nextTick(()=>{if(pickerColumn.value)pickerColumn.value.scrollTop=currentPickerValue.value*50;}); }
+    else { addNitrogenReading(); }
+  };
+  const previousPickerStep = () => {
+    if (currentDepthStep.value>0) { const depths=['d4','d8','d12']; nitrogenReadings.value[depths[currentDepthStep.value]]=currentPickerValue.value; currentDepthStep.value--; currentPickerValue.value=nitrogenReadings.value[depths[currentDepthStep.value]]; nextTick(()=>{if(pickerColumn.value)pickerColumn.value.scrollTop=currentPickerValue.value*50;}); }
+  };
+  const closeNitrogenPicker = () => { showNitrogenPicker.value=false; };
+  const addNitrogenReading = () => {
+    if (isAddingReading.value) return; isAddingReading.value=true;
+    setTimeout(async () => {
+      try {
+        const pos=await getCurrentPosition();
+        const totalRain=readingSettings.value.expectedRain||weatherData.value?.rain7days?.reduce((a,b)=>a+b,0)||0;
+        const nd=quickNitrogenAnalysis(nitrogenReadings.value.d4,nitrogenReadings.value.d8,nitrogenReadings.value.d12,totalRain);
+        const reading={ location:{lat:pos.lat,lon:pos.lon}, timestamp:Date.now(), nitrogenData:nd, type:'nitrogen' };
+        let targetNote=activeNote.value;
+        if (autosaveEnabled.value&&autosaveNoteId.value) { const an=notes.value.find(n=>n.id===autosaveNoteId.value&&n.mode==='farm'); if(an) targetNote=an; }
+        if (!targetNote) { showToast('No active note','⚠️'); isAddingReading.value=false; return; }
+        if (!targetNote.farmReadings) targetNote.farmReadings=[];
+        targetNote.farmReadings.push(reading);
+        targetNote.blocks.push({ id:Date.now(), type:'nitrogen', nitrogenData:nd, location:reading.location, timestamp:Date.now() });
+        showToast('N Reading saved','🌱'); showNitrogenPicker.value=false;
+        nextTick(()=>{ scrollToBottom(); if(mapInstance) refreshMapMarkers(); });
+      } catch(e) { showToast('GPS error','⚠️'); }
+      isAddingReading.value=false;
+    }, 10);
+  };
+
+  // ── Weed ─────────────────────────────────────────────────────────
+  const openWeedPickerForFeed = () => { modal.value={show:true,type:'weedPicker',title:'🌿 Select Weeds',selectedWeeds:[]}; };
+  const openWeedPickerForMapNote = () => { modal.value={show:true,type:'weedPicker',title:'🌿 Weeds',selectedWeeds:[...(mapNoteForm.value.weeds||[])]}; };
+  const toggleWeed = (w) => { const idx=modal.value.selectedWeeds.indexOf(w); if(idx>-1) modal.value.selectedWeeds.splice(idx,1); else modal.value.selectedWeeds.push(w); };
+
+  // ── Modal ─────────────────────────────────────────────────────────
+  const openCreateFolderModal = () => { modal.value={show:true,type:'createFolder',title:'New Folder',folderName:'',selectedColor:'#22c55e',selectedWeeds:[]}; nextTick(()=>folderNameInput.value?.focus()); };
+  const openDeleteFolderModal = (id) => { modal.value={show:true,type:'confirm',action:'deleteFolder',title:'Delete Folder',message:'Delete this folder?',targetId:id,selectedWeeds:[]}; };
+  const openDeleteNoteModal = (id) => { modal.value={show:true,type:'confirm',action:'deleteNote',title:'Delete Note',message:'Move to trash?',targetId:id,selectedWeeds:[]}; };
+  const closeModal = () => { modal.value.show=false; weedSearch.value=''; };
+  const modalConfirm = () => {
+    if (modal.value.type==='createFolder'&&modal.value.folderName.trim()) {
+      folders.value.push({id:Date.now().toString(),name:modal.value.folderName,expanded:true,color:modal.value.selectedColor}); showToast('Folder created');
+    } else if (modal.value.type==='confirm') {
+      if (modal.value.action==='deleteFolder') { notes.value.forEach(n=>{if(n.folderId===modal.value.targetId){n.isDeleted=true;if(activeNoteId.value===n.id)activeNoteId.value=null;}}); folders.value=folders.value.filter(f=>f.id!==modal.value.targetId); showToast('Folder deleted'); }
+      else if (modal.value.action==='deleteNote') { const n=notes.value.find(n=>n.id===modal.value.targetId); if(n){n.isDeleted=true;if(activeNoteId.value===n.id)activeNoteId.value=null;showToast('Moved to trash');} }
+    } else if (modal.value.type==='weedPicker') {
+      if (showMapNoteModal.value) { mapNoteForm.value.weeds=[...modal.value.selectedWeeds]; }
+      else if (activeNote.value) { activeNote.value.blocks.push({id:Date.now(),type:'text',text:`🌿 **Weeds:** ${modal.value.selectedWeeds.map(w=>w.split(' - ')[0]).join(', ')}`,timestamp:Date.now(),isEditing:false}); scrollToBottom(); }
+    }
+    closeModal();
+  };
+
+  // ── Note management ───────────────────────────────────────────────
+  const createNote = (folderId) => {
+    const id=Date.now().toString();
+    notes.value.push({id,folderId,title:'',blocks:[],mode:'farm',farmReadings:[],isDeleted:false,timestamp:Date.now()});
+    openNote(id); nextTick(()=>titleInput.value?.focus());
+  };
+  const openNote = (id) => {
+    activeNoteId.value=id; farmTab.value='feed'; feedFilter.value='all'; feedSearch.value='';
+    if (window.innerWidth<768) sidebarOpen.value=false;
+    nextTick(()=>scrollToBottom());
+  };
+  const getFolderNotes = (folderId) => notes.value.filter(n => {
+    const inFolder=n.folderId===folderId&&!n.isDeleted;
+    if (!searchQuery.value) return inFolder;
+    const q=searchQuery.value.toLowerCase();
+    return inFolder&&(n.title?.toLowerCase().includes(q)||n.blocks?.some(b=>b.text?.toLowerCase().includes(q)));
+  }).sort((a,b)=>b.timestamp-a.timestamp);
+  const emptyTrash = () => { notes.value=notes.value.filter(n=>!n.isDeleted); showToast('Trash emptied'); };
+  const permanentlyDeleteNote = (id) => { notes.value=notes.value.filter(n=>n.id!==id); if(activeNoteId.value===id)activeNoteId.value=null; };
+
+  // ── Blocks ────────────────────────────────────────────────────────
+  const appendMessage = () => {
+    if (!newMessage.value.trim()||!activeNote.value) return;
+    activeNote.value.blocks.push({id:Date.now(),text:newMessage.value.trim(),type:'text',timestamp:Date.now(),isEditing:false});
+    activeNote.value.timestamp=Date.now(); newMessage.value='';
+    nextTick(()=>{autoResizeInput();scrollToBottom();messageInput.value?.focus();});
+  };
+  const deleteBlock = (i) => { activeNote.value.blocks.splice(i,1); };
+  const renderBlock = (block) => block.type==='image'?`<img src="${block.data}" alt="">`:(typeof marked!=='undefined'?marked.parse(block.text||''):block.text||'');
+  const scrollToBottom = () => nextTick(()=>{if(feedEl.value) feedEl.value.scrollTop=feedEl.value.scrollHeight;});
+  const shouldShowDateFiltered = (i) => {
+    if (!activeNote.value||i===0) return i===0;
+    const blocks=filteredBlocks.value;
+    if (i>=blocks.length) return false;
+    const a=new Date(blocks[i-1].timestamp).toDateString();
+    const b=new Date(blocks[i].timestamp).toDateString();
+    return a!==b;
+  };
+  const formatDate = (ts) => { const d=new Date(ts); if(d.toDateString()===new Date().toDateString()) return 'Today'; return d.toLocaleDateString('fr-FR',{month:'short',day:'numeric'}); };
+  const formatTime = (ts) => new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const setTextareaHeight = (el) => { if(!el) return; el.style.height='auto'; el.style.height=el.scrollHeight+'px'; };
+  const autoResizeInput = () => { const el=messageInput.value; if(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,96)+'px';} };
+  const onInputChange = () => { autoResizeInput(); };
+
+  // ── Media ─────────────────────────────────────────────────────────
+  let mediaRecorder=null, audioChunks=[];
+  const triggerCamera = () => cameraInput.value?.click();
+  const triggerGallery = () => galleryInput.value?.click();
+  const handleImageUpload = (e) => {
+    const f=e.target.files[0]; if(!f) return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const img=new Image(); img.onload=()=>{
+        const canvas=document.createElement('canvas'); let w=img.width,h=img.height;
+        if(w>1200){h=h*1200/w;w=1200;} canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        activeNote.value.blocks.push({id:Date.now(),type:'image',data:canvas.toDataURL('image/jpeg',.8),text:'Image',timestamp:Date.now()});
+        scrollToBottom();
+      }; img.src=ev.target.result;
+    }; reader.readAsDataURL(f); e.target.value='';
+  };
+  const handlePaste = (e) => {
+    const items=(e.clipboardData||e.originalEvent?.clipboardData)?.items; if(!items) return;
+    for(const item of items){if(item.kind==='file'&&item.type.includes('image'))handleImageUpload({target:{files:[item.getAsFile()]}});}
+  };
+  const toggleRecording = async () => {
+    if(isRecording.value){mediaRecorder?.stop();isRecording.value=false;return;}
+    try {
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true}); mediaRecorder=new MediaRecorder(stream); audioChunks=[];
+      mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);
+      mediaRecorder.onstop=()=>{
+        const blob=new Blob(audioChunks,{type:'audio/mp3'}); const reader=new FileReader();
+        reader.onload=e=>{activeNote.value.blocks.push({id:Date.now(),type:'audio',data:e.target.result,text:'Voice',timestamp:Date.now()});scrollToBottom();};
+        reader.readAsDataURL(blob);
+      }; mediaRecorder.start(); isRecording.value=true;
+    } catch(e){showToast('Mic denied','⚠️');}
+  };
+
+  // ── Misc ──────────────────────────────────────────────────────────
+  const showToast = (msg,icon='✓') => { toast.value={show:true,message:msg,icon}; setTimeout(()=>toast.value.show=false,3000); };
+  const setViewMode = (m) => { viewMode.value=m; };
+  const startHoldTimer = (e,id) => { holdTimer=setTimeout(()=>openDeleteNoteModal(id),600); };
+  const cancelHoldTimer = () => { if(holdTimer)clearTimeout(holdTimer); };
+  const openDiagnosticDetails = (block) => { modal.value={show:true,type:'noteDetail',title:'N Diagnostic',noteData:block,selectedWeeds:[]}; };
+  const exportData = () => {
+    const data={folders:folders.value,notes:notes.value,exportDate:new Date().toISOString()};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a');
+    a.href=url; a.download=`bc_farm_${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url);
+    showToast('Exported','📥');
+  };
+
+  watch(farmTab, v=>{if(v==='map') nextTick(()=>initMap());});
+  watch(activeNoteId, ()=>{if(farmTab.value==='map'&&mapInstance) nextTick(()=>refreshMapMarkers());});
+
+  onMounted(()=>{ loadData(); getGPS(); });
+
+  return {
+    folders, notes, activeNoteId, sidebarOpen, isDark, newMessage, viewMode, searchQuery,
+    feedSearch, feedFilter, editingFolderId, isRecording, toast, farmTab, feedEl, messageInput,
+    cameraInput, galleryInput, pickerColumn, mapNoteCameraInput, folderNameInput, titleInput,
+    modal, folderColors, weedSearch, userLat, userLng, gpsStatus, weatherData,
+    showNitrogenPicker, currentDepthStep, nitrogenReadings, currentPickerValue, isAddingReading, pickerDepthLabel,
+    readingSettings, mapNoteMode, showMapNoteModal, mapNoteForm, autosaveEnabled, autosaveNoteId,
+    filteredWeedList, TUNISIAN_WEEDS, activeNote, trashedNotes, filteredBlocks, treeTypes,
+    ecForm,
+    appendMessage, deleteBlock, renderBlock, scrollToBottom, shouldShowDateFiltered, formatDate, formatTime,
+    setTextareaHeight, autoResizeInput, onInputChange, triggerCamera, triggerGallery, handleImageUpload, handlePaste, toggleRecording,
+    createNote, openNote, getFolderNotes, emptyTrash, permanentlyDeleteNote,
+    openCreateFolderModal, openDeleteFolderModal, openDeleteNoteModal, closeModal, modalConfirm,
+    openWeedPickerForFeed, openWeedPickerForMapNote, toggleWeed,
+    startNitrogenReading, updatePickerValue, confirmPickerValue, previousPickerStep, closeNitrogenPicker,
+    fillRainFromWeather, enableMapNoteMode, saveMapNote, triggerMapNoteCamera, handleMapNoteImage,
+    showToast, setViewMode, startHoldTimer, cancelHoldTimer, initMap, toggleTheme, exportData,
+    openDiagnosticDetails, openEcModal, saveEcReading, openEcDetails, exportToPDF
+  };
+}
+}).mount('#app');
+</script>
+</body>
+</html>
